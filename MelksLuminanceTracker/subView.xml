@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<view icon="8742" title="MelksLuminanceTracker" width="150" height="80">
+    <control progid="DecalControls.FixedLayout" clipped="" name="popout">
+        <control progid="DecalControls.StaticText" name="subtimeLabel" left="0" top="0" width="150" height="20" text="Time: 00:00"/>
+        <control progid="DecalControls.StaticText" name="subluminRateLabel" left="0" top="20" width="150" height="20" text="Lum/hr: 0"/>
+        <control progid="DecalControls.StaticText" name="subcoinRateLabel" left="0" top="40" width="150" height="20" text="Coins/hr: 0"/>
+        <control progid="DecalControls.StaticText" name="subKillHrLabel" left="0" top="60" width="150" height="20" text="Kill/hr: 0"/>
+     </control>
+</view>

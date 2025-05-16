@@ -1,0 +1,736 @@
+/*using Decal.Adapter;
+using Decal.Interop.Core;
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Xml;
+using VirindiViewService;
+using VirindiViewService.Controls;
+*/
+
+using System;
+
+using Decal.Adapter;
+using Decal.Adapter.Wrappers;
+using MyClasses.MetaViewWrappers;
+using System.Text.RegularExpressions;
+
+/*
+ * Created by Mag-nus. 8/19/2011, VVS added by Virindi-Inquisitor.
+ * 
+ * No license applied, feel free to use as you wish. H4CK TH3 PL4N3T? TR45H1NG 0UR R1GHT5? Y0U D3C1D3!
+ * 
+ * Notice how I use try/catch on every function that is called or raised by decal (by base events or user initiated events like buttons, etc...).
+ * This is very important. Don't crash out your users!
+ * 
+ * In 2.9.6.4+ Host and Core both have Actions objects in them. They are essentially the same thing.
+ * You sould use Host.Actions though so that your code compiles against 2.9.6.0 (even though I reference 2.9.6.5 in this project)
+ * 
+ * If you add this plugin to decal and then also create another plugin off of this sample, you will need to change the guid in
+ * Properties/AssemblyInfo.cs to have both plugins in decal at the same time.
+ * 
+ * If you have issues compiling, remove the Decal.Adapater and VirindiViewService references and add the ones you have locally.
+ * Decal.Adapter should be in C:\Games\Decal 3.0\
+ * VirindiViewService should be in C:\Games\VirindiPlugins\VirindiViewService\
+*/
+
+namespace MelksLuminanceTracker
+{
+    //Attaches events from core
+	[WireUpBaseEvents]
+
+    //View (UI) handling
+    [MVView("MelksLuminanceTracker.mainView.xml")]
+    [MVWireUpControlEvents]
+
+	// FriendlyName is the name that will show up in the plugins list of the decal agent (the one in windows, not in-game)
+	// View is the path to the xml file that contains info on how to draw our in-game plugin. The xml contains the name and icon our plugin shows in-game.
+	// The view here is SamplePlugin.mainView.xml because our projects default namespace is SamplePlugin, and the file name is mainView.xml.
+	// The other key here is that mainView.xml must be included as an embeded resource. If its not, your plugin will not show up in-game.
+	[FriendlyName("MelksLuminanceTracker")]
+	public class PluginCore : PluginBase
+	{        
+		private double initialCoins = -1;
+		private double initialLuminance = -1;
+		private double currentCoins;
+        private int currentcoincount;
+        private int curAetheria = 0;
+        private int curTrinket = 0;
+		private double currentLuminance;
+        private double killLuminance = 0;
+        private double otherLuminance = 0;
+        private double effectiveCRate = 0;
+        private double effectiveLRate = 0;
+        private double hours;
+        private double luminRate = 0;
+        private double coinRate = 0;
+        private double coinRateLum = 0;
+        private double lumRateCoin = 0;
+        private double lumdiff = 0;
+        private double luminkillRate = 0;
+        private double luminOtherRate = 0;
+        private double coinRateKillLum = 0;
+        private double coinRateOtherLum = 0;
+        private double effectivekillRate = 0;
+        private double effectiveOtherRate = 0;
+        private double killsperhr = 0;
+        private double killsTotal = 0;
+        private TimeSpan elapsed;
+		private DateTime startTime;
+        private int pollRate = 1;
+		private System.Timers.Timer pollTimer;
+        private System.Timers.Timer updateTimer;
+        private System.Timers.Timer clrTimer;
+		private bool autoResetEnabled = false;
+        private bool coinusebank = false;
+        private bool progenable = true;
+        private bool eatbank = false;
+        private bool bankdata = false;
+		private double conversionCRate = 66.2;
+        private double conversionLRate = 66;
+        //PopoutWindow tempPopoutwindow = new PopoutWindow();
+
+		protected override void Startup()
+		{
+			try
+			{
+				// This initializes our static Globals class with references to the key objects your plugin will use, Host and Core.
+				// The OOP way would be to pass Host and Core to your objects, but this is easier.
+				Globals.Init("MelksLuminanceTracker", Host, Core);
+				//Initialize the view.
+				MVWireupHelper.WireupStart(this, Host);
+			}
+			catch (Exception ex) {Util.WriteToChat($"Startup Error: {ex}");}
+		}
+
+		protected override void Shutdown()
+		{
+			try
+			{
+                		//Destroy the view.
+               			MVWireupHelper.WireupEnd(this);
+			}
+			catch (Exception ex) {Util.WriteToChat($"Shutdown Error: {ex}");}
+		}
+
+		[BaseEvent("LoginComplete", "CharacterFilter")]
+		private void CharacterFilter_LoginComplete(object sender, EventArgs e)
+		{
+			try
+			{
+				//Util.WriteToChat("Plugin now online. Server population: " + Core.CharacterFilter.ServerPopulation);
+				//Util.WriteToChat("CharacterFilter_LoginComplete");
+				//InitSampleList();
+				// Subscribe to events here
+				//Globals.Core.WorldFilter.ChangeObject += new EventHandler<ChangeObjectEventArgs>(WorldFilter_ChangeObject2);
+				Util.WriteToChat("Melks Luminance Tracker Started");
+                Util.WriteToChat("to see possible commands type /mlt help");				
+				startTime = DateTime.Now;
+				pollTimer = new System.Timers.Timer(60000);
+                updateTimer = new System.Timers.Timer(5000);
+                clrTimer = new System.Timers.Timer(2000);
+                updateTimer.Elapsed += QuickUpdateUI;
+				pollTimer.Elapsed += UpdateUI;
+                clrTimer.Elapsed += eatClear;                
+                pollTimer.Start();
+                updateTimer.Start();
+                updateconversion();
+                initControls();				
+                bankPoll(true);
+			}
+			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_LoginComplete Error: {ex}");}
+		}
+
+		[BaseEvent("Logoff", "CharacterFilter")]
+		private void CharacterFilter_Logoff(object sender, Decal.Adapter.Wrappers.LogoffEventArgs e)
+		{
+			try
+			{
+				// Unsubscribe to events here, but know that this event is not gauranteed to happen. I've never seen it not fire though.
+				// This is not the proper place to free up resources, but... its the easy way. It's not proper because of above statement.
+				//Globals.Core.WorldFilter.ChangeObject -= new EventHandler<ChangeObjectEventArgs>(WorldFilter_ChangeObject2);
+                pollTimer?.Stop();
+                clrTimer?.Stop();
+                updateTimer?.Stop();
+                pollTimer?.Dispose();
+                clrTimer?.Dispose();
+                updateTimer?.Dispose();
+				pollTimer = null;
+                clrTimer = null;
+                updateTimer = null;
+                
+			}
+			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_Logoff Error: {ex}");}
+		}
+
+        private void UpdateUI(object sender, EventArgs e)
+		{
+			try
+			{
+                if (!progenable){ return;}
+                bankPoll(true);
+			}
+			catch (Exception ex) {Util.WriteToChat($"UpdateUI Error: {ex}");}
+		}
+
+        private void bankPoll(bool eb) 
+        {
+            eatbank = eb;
+            clrTimer.Start();
+            CoreManager.Current.Actions.InvokeChatParser("/b");
+        }
+
+        private void eatClear(object sender, EventArgs e)
+        {
+            try
+			{
+                eatbank = false;
+                Util.WriteToChat("Eat Bank Data Timer Met!");
+                clrTimer?.Stop();
+            }
+            catch (Exception ex) {Util.WriteToChat($"doCalcs Error: {ex}");}
+        }
+
+        private void QuickUpdateUI(object sender, EventArgs e)
+        {
+            try
+			{                
+                if (initialCoins == -1 || initialLuminance == -1) {return;}
+                doCalcs();
+                
+		        string tmplumcurstr = StrValUpdate(currentLuminance);
+                string tmplumstr = StrValUpdate(luminRate);
+                string tmpothlumcurstr = StrValUpdate(otherLuminance);
+                string tmpkilllumcurstr = StrValUpdate(killLuminance);
+                string tmpkilllumratestr = StrValUpdate(luminkillRate);                
+                string tmpotherumratestr = StrValUpdate(luminOtherRate);
+                string tmpeffectiveLRate = StrValUpdate(effectiveLRate);
+                string tmplumRateCoin = StrValUpdate(lumRateCoin);
+                
+                luminCurrentLabel.Text = $"[Bank] Luminance: {tmplumcurstr}";
+                coinCurrentLabel.Text = $"[Bank] Coins: {currentCoins}";
+                timeLabel.Text = $"Time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}";
+				luminRateLabel.Text = $"Lum/hr: {tmplumstr}";
+				coinRateLabel.Text = $"Coins/hr: {coinRate}";
+                coinRateLumLabel.Text = $"Lum-Coins/hr: {coinRateLum}";
+                lumRateCoinLabel.Text = $"Coins-Lum/hr: {tmplumRateCoin}";
+				effectiveCRateLabel.Text = $"Effective C/hr: {effectiveCRate}";
+				effectiveLRateLabel.Text = $"Effective L/hr: {tmpeffectiveLRate}";
+                atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount}";
+                
+                KillLabel.Text = $"Kills: {killsTotal}";
+                KillHrLabel.Text = $"Kills/hr: {killsperhr}";
+                luminKillLabel.Text = $"Kill Lum: {tmpkilllumcurstr}";
+                luminOtherlLabel.Text = $"Other Lum: {tmpothlumcurstr}";
+                luminKillRateLabel.Text = $"Lum/hr K: {tmpkilllumratestr}";
+                coinRateKillLumLabel.Text = $"Lum-Coins/hr K: {coinRateKillLum}";
+                effectiveKillRateLabel.Text = $"Effective K: {effectivekillRate}";
+                luminOtherRateLabel.Text = $"Lum/hr O: {tmpotherumratestr}";
+                coinRateOtherLumLabel.Text = $"Lum-Coins/hr O: {coinRateOtherLum}";
+                effectiveOtherRateLabel.Text = $"Effective O: {effectiveOtherRate}";
+            }
+            catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
+        }
+
+        private string StrValUpdate(double e)
+        {
+            try
+            {
+                string tmpvalstr = $"{e}";
+                double tmpval = e;
+                if ((tmpval >= 1000000) && (tmpval < 1000000000)) 
+                {
+                    tmpval = tmpval / 1000000;
+                    tmpval = Math.Round(tmpval, 3);
+                    tmpvalstr = $"{tmpval} Mil";
+                }
+                else if (tmpval > 1000000000)
+                {
+                    tmpval = tmpval / 1000000000;
+                    tmpval = Math.Round(tmpval, 3); 
+                    tmpvalstr = $"{tmpval} Bil";
+                }
+                return tmpvalstr;
+			}
+			catch (Exception ex) {Util.WriteToChat($"StrValUpdate Error: {ex}");}
+            return "0";
+		}
+               
+        private void initControls()
+		{
+		    try
+		    {
+			    luminCurrentLabel.Text = "[Bank] Luminance: 0";
+			    coinCurrentLabel.Text = "[Bank] Coins: 0";
+                luminRateLabel.Text = "Lum/hr: 0";
+			    coinRateLabel.Text = "Coins/hr: 0";
+                coinRateLumLabel.Text = "Lum-Coins/hr: 0";
+                lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
+			    effectiveCRateLabel.Text = "Effective C/hr: 0";
+			    effectiveLRateLabel.Text = "Effective L/hr: 0";
+			    timeLabel.Text = "Time: 00:00";          
+		    }
+		    catch (Exception ex) {Util.WriteToChat($"initControls Error: {ex}");}
+		}
+
+        private void updateconversion()
+        {
+            try
+			{
+                if (convRateInput.Text == null) {conversionCRate = 66.2;}
+				else{
+				    double.TryParse(convRateInput.Text, out conversionCRate);
+		            if (double.IsNaN(conversionCRate) || double.IsInfinity(conversionCRate)) {conversionCRate = 66.2;}
+                }
+                if (convRateLInput.Text == null) {conversionLRate = 66;}
+				else{
+				    double.TryParse(convRateLInput.Text, out conversionLRate);
+		            if (double.IsNaN(conversionLRate) || double.IsInfinity(conversionLRate)) {conversionLRate = 66;}
+                }
+                conversionCRate = conversionCRate * 1000000;
+                conversionLRate = conversionLRate * 1000000;
+                Util.WriteToChat($"Conversion Rate set to {conversionCRate} Coins per Luminance");
+                Util.WriteToChat($"Conversion Rate set to {conversionLRate} Luminance per coin");
+            }
+            catch (Exception ex) {Util.WriteToChat($"updateconversion Error: {ex}");}
+		}
+
+        private void totalReset()
+        {
+            try
+            {
+                initialCoins = -1;
+				initialLuminance = -1;
+                currentcoincount = 0;
+                curAetheria = 0;
+                curTrinket = 0;
+                killLuminance = 0;
+                luminkillRate = 0;
+                luminOtherRate = 0;
+                coinRateKillLum = 0;
+                coinRateOtherLum = 0;
+                effectivekillRate = 0;
+                killsperhr = 0;
+                killsTotal = 0;
+                
+				startTime = DateTime.Now;				
+				pollTimer?.Stop();
+                
+				luminRateLabel.Text = "Lum/hr: 0";
+				coinRateLabel.Text = "Coins/hr: 0";
+                coinRateLumLabel.Text = "Lum-Coins/hr: 0";
+                lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
+				effectiveCRateLabel.Text = "Effective C/hr: 0";
+				effectiveLRateLabel.Text = "Effective L/hr: 0";
+				timeLabel.Text = "Time: 00:00";          
+                
+                KillLabel.Text = "Kills: 0";
+                KillHrLabel.Text = "Kills/hr: 0";
+                luminKillLabel.Text = "Kill Lum: 0";
+                luminOtherlLabel.Text = "Other Lum: 0";
+                luminKillRateLabel.Text = "Lum/hr K: 0";
+                luminOtherRateLabel.Text = "Lum/hr O: 0";
+                coinRateKillLumLabel.Text = "Lum-Coins/hr K: 0";
+                coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
+                effectiveKillRateLabel.Text = "Effective K: 0";
+                effectiveOtherRateLabel.Text = "Effective O: 0";
+                atcCurLbl.Text = "A: 0 T: 0 C: 0";
+                if (!progenable){ return;}
+                bankPoll(true);
+				pollTimer.Start();
+            }
+            catch (Exception ex) {Util.WriteToChat($"totalReset Error: {ex}");}
+        }
+
+        private void doCalcs()
+        {
+            try
+			{
+                elapsed = DateTime.Now - startTime;
+                hours = elapsed.TotalHours;
+                //Coin gen
+                if ((curAetheria >= 1) && (!coinusebank)){
+                    if (curTrinket >= 1){
+                        currentcoincount += 1;
+                        curAetheria -= 1;
+                        curTrinket -= 1;
+                    }
+                }
+                killsperhr = hours > 0 ? Math.Round(killsTotal / hours) : 0;
+                if (!progenable){ return;}
+                // Luminance per hour
+                luminRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance) / hours, 1) : 0;
+                lumdiff = currentLuminance - initialLuminance;
+                if (coinusebank){
+    		        coinRate = hours > 0 ? Math.Round((currentCoins - initialCoins) / hours, 1) : 0;}
+                else {
+                    coinRate = hours > 0 ? Math.Round(currentcoincount / hours, 1) : 0;}
+                // coins per hour from luminance
+                coinRateLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance) / hours / conversionCRate)) : 0;
+	            effectiveCRate = coinRate + coinRateLum;
+                // Lum per hour from Coins
+                if (coinusebank){
+                    lumRateCoin =  hours > 0 ? Math.Round(((currentCoins - initialCoins) / hours * conversionLRate), 1) : 0;}
+                else {
+                    lumRateCoin =  hours > 0 ? Math.Round((currentcoincount / hours * conversionLRate), 1) : 0;
+                }
+                effectiveLRate = luminRate + lumRateCoin;
+                // Other Luminance
+                otherLuminance = lumdiff - killLuminance;
+                if (otherLuminance < 0){otherLuminance=0;}
+                
+                // Luminance hr rates for kill/other
+                luminkillRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance - otherLuminance) / hours, 1) : 0;
+                luminOtherRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance - killLuminance) / hours, 1) : 0;
+                coinRateKillLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance - otherLuminance) / hours / conversionCRate)) : 0;
+                coinRateOtherLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance - killLuminance) / hours / conversionCRate)) : 0;
+                effectivekillRate = coinRate + coinRateKillLum;
+                effectiveOtherRate = coinRate + coinRateOtherLum;
+            }
+            catch (Exception ex) {Util.WriteToChat($"doCalcs Error: {ex}");}
+        }
+
+        private void pollrtchng()
+        {
+            try
+			{   
+                if (pollRateInput.Text == null) {pollRate = 1;}
+                else{
+                    int.TryParse(pollRateInput.Text, out pollRate);
+                }
+                if (pollRate < 1){pollRate = 1;}
+                pollTimer?.Stop();
+                pollTimer.Interval = pollRate * 60000;
+                pollTimer.Start();
+                Util.WriteToChat("Updated Poll Rate Minutes: " + pollTimer.Interval);
+            }
+            catch (Exception ex) {Util.WriteToChat($"pollrtchng Error: {ex}");}
+		}
+    
+        [MVControlEvent("resetBtn", "Click")]
+		void reset_Btn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+				totalReset();
+			}
+			catch (Exception ex) {Util.WriteToChat($"reset_Btn_Click Error: {ex}");}
+		}
+
+		[MVControlEvent("autoResetBtn", "Click")]
+		void autoResetBtn_Click(object sender, MVControlEventArgs e)
+        {
+			try
+			{
+        	    autoResetEnabled = !autoResetEnabled;
+                Util.WriteToChat($"autoResetEnabled = {autoResetEnabled}");
+		        autoResetBtn.Text = $"Auto-Reset Txfr: {(autoResetEnabled ? "On" : "Off")}";
+			}
+			catch (Exception ex) {Util.WriteToChat($"autoResetBtn_Click Error: {ex}");}
+        }
+
+        [MVControlEvent("qbankButton", "Click")]
+		void qbankButton_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                bankPoll(true);
+            }
+			catch (Exception ex) {Util.WriteToChat($"bankButton_Click Error: {ex}");}
+		}
+            
+        [MVControlEvent("bankButton", "Click")]
+		void bankButton_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                bankPoll(false);
+            }
+			catch (Exception ex) {Util.WriteToChat($"bankButton_Click Error: {ex}");}
+		}
+
+
+        [MVControlEvent("clapButton", "Click")]
+		void clapButton_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                CoreManager.Current.Actions.InvokeChatParser("/clap all");
+            }
+			catch (Exception ex) {Util.WriteToChat($"clapButton_Click Error: {ex}");}
+		}
+
+        [MVControlEvent("UpdatePoll", "Click")]
+		void UpdatePoll_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                pollrtchng();
+            }
+			catch (Exception ex) {Util.WriteToChat($"UpdatePoll Error: {ex}");}
+		}
+
+        [MVControlEvent("coinBankBtn", "Click")]
+		void coinBankBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+				coinusebank = !coinusebank;
+                Util.WriteToChat($"{coinusebank}");
+                coinBankBtn.Text = $"Coin by Bank: {(coinusebank ? "On" : "Off")}";
+			}
+			catch (Exception ex) {Util.WriteToChat($"coinBankBtn_Click Error: {ex}");}
+		}
+        
+        [MVControlEvent("applyConversionButton", "Click")]
+		void applyConversionButton_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                Util.WriteToChat("Updating Conversion Factor");
+                updateconversion();
+            }
+			catch (Exception ex) {Util.WriteToChat($"applyConversionButton Error: {ex}");}
+		}
+
+        [MVControlEvent("calcEnableBtn", "Click")]
+		void calcEnableBtn_Change(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+				progenable = !progenable;
+                Util.WriteToChat($"{progenable}");
+                calcEnableBtn.Text = $"{(progenable ? "Enabled" : "Disabled")}";
+                if (!progenable){totalReset();}
+			}
+			catch (Exception ex) {Util.WriteToChat($"calcEnableBtn_Change Error: {ex}");}
+		}
+        
+        [BaseEvent("ChatBoxMessage")]
+        private void  Current_ChatBoxMessage(object sender, ChatTextInterceptEventArgs e)
+        {
+            try
+            { //Coruscating Death gives you Ancient Empyrean Trinket.  Coruscating Death gives you Coalesced Aetheria.
+                //Util.WriteToChat($"Message: {e.Text.ToLower()}");
+                string checkstr = e.Text.ToLower();
+                if (checkstr.StartsWith("[[bank] your balances are:")){bankdata = true; }
+                if (checkstr.StartsWith("[bank] luminance: "))
+                {
+                    string lumtmp = checkstr.Substring(18).Replace(",","");
+                    currentLuminance = double.Parse(lumtmp);
+                    if (initialLuminance == -1)
+                    {
+                        initialLuminance = currentLuminance;
+                    }
+                }
+                if (checkstr.StartsWith("[bank] enlightened coins: "))
+                {
+                    string cointmp = checkstr.Substring(26).Replace(",","");
+                    currentCoins = double.Parse(cointmp);
+                    if (initialCoins == -1)
+                    {
+                        initialCoins = currentCoins;
+                    }
+                }
+                if (checkstr.StartsWith("you've banked ")) //You've banked 379,567 Luminance.
+                {
+                    checkstr = checkstr.Replace(",", "");
+                    killLuminance += double.Parse(Regex.Match(checkstr, @"\d+").Value);
+                    killsTotal += 1;
+                }
+                if ((eatbank == true) && (checkstr.StartsWith("[bank]"))) {e.Eat = true;}
+                if (checkstr.StartsWith("[bank] weakly enlightened coins:")) 
+                {
+                    eatbank = false; 
+                    bankdata = false;
+                    doCalcs();
+                    clrTimer.Stop();}
+                string message = e.Text.ToLower();
+                if (autoResetEnabled){
+                    bool isAugUsage= false;
+                    if (checkstr.StartsWith("You have successfully increased your")) {isAugUsage = true;}                    
+                    bool isCoinTransfer = Regex.IsMatch(message,
+                        @"^(transferred \d+ enlightened coins to .+|" +  //Transferred 25 Enlightened coins to Melka Summoner
+                        @"received \d+ enlightened coins from .+)$");  //Received 25 Enlightend Coins from Melkoran
+                    bool isLuminanceTransfer = Regex.IsMatch(message,
+                            @"^(transferred \d+ luminance to .+|" +
+                            @"received \d+ luminance from .+)$");
+                                        
+                    if (isCoinTransfer || isLuminanceTransfer || isAugUsage)
+                        {
+                            totalReset();
+                        }
+                }                
+                if (!coinusebank){
+                    bool isAetheria = Regex.IsMatch(message, @"gives you coalesced aetheria.$");
+                    bool isTrinket = Regex.IsMatch(message, @"gives you ancient empyrean trinket.$");
+                    if (isAetheria){curAetheria += 1;}
+                    if (isTrinket) {curTrinket += 1;}
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.WriteToChat($"Command Line Processing Error: {ex}");
+            }
+        }
+
+        [BaseEvent("CommandLineText")]
+        void Core_CommandLineText(object sender, ChatParserInterceptEventArgs e)
+        {
+            try
+            {
+                string text = e.Text;
+                if (text.Length <= 0)
+                {
+                    return;
+                }
+                // Split into tokens for easier processing
+                string[] tokens = text.Split(' ');
+                string command = tokens[0].ToLower();
+
+                if (command.StartsWith("@MelksLuminanceTracker") ||
+                    command.StartsWith("@mlt") ||
+                    command.StartsWith("/MelksLuminanceTracker") ||
+                    command.StartsWith("/mlt"))
+                {
+                    e.Eat = true;
+
+                    ProcessCommand(tokens);
+                }
+            }
+            catch (Exception ex) {Util.WriteToChat($"Command Line Text Error: {ex}");}
+        }
+
+        private void ProcessCommand(string[] tokens)
+        {
+            try
+            {
+                if (tokens.Length == 0)
+                {
+                    return;
+                }
+                if (tokens.Length < 2 || tokens[1].ToLower() == "help")
+                {
+                    Util.WriteToChat("Melk's Luminance Tracker");
+                    Util.WriteToChat("/mlt reset");
+                    Util.WriteToChat("/mlt stop");
+                    Util.WriteToChat("/mlt start");
+                    Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
+                    Util.WriteToChat("It will calculate how many coins/hr you make just from luminance.");
+                    Util.WriteToChat("The Auto Reset button enables/disables resetting all values automatically when there is a transfer of Lum or Coins");
+                    Util.WriteToChat("The Coin by Bank checkbox uses the coins in your bank to calculate your hourly coins gained instead of atheria/trinket pickups");
+                    Util.WriteToChat("The program Automatically polls the bank every minute but hides the output.");
+                    Util.WriteToChat("the q/b button also polls the bank to update values and hides the output");
+                    return;
+                }
+                if (tokens[1].ToLower() == "reset")
+                {
+                    Util.WriteToChat("Resetting Values");
+                    totalReset();
+                }
+                if (tokens[1].ToLower() == "stop")
+                {
+                    if (progenable == false) {Util.WriteToChat("Already Stopped"); return;}
+                    Util.WriteToChat("Calculations Stopped");
+                    progenable = false;
+                }
+                if (tokens[1].ToLower() == "start")
+                {
+                    if (progenable == true) {Util.WriteToChat("Already Running"); return;}
+                    Util.WriteToChat("Calculations Started");
+                    progenable= true;
+                }
+            }
+            catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
+        }
+
+		[MVControlReference("luminCurrentLabel")]
+		private IStaticText luminCurrentLabel = null;
+
+		[MVControlReference("coinCurrentLabel")]
+		private IStaticText coinCurrentLabel = null;
+
+		[MVControlReference("luminRateLabel")]
+		private IStaticText luminRateLabel = null;
+
+		[MVControlReference("coinRateLabel")]
+		private IStaticText coinRateLabel = null;
+
+        [MVControlReference("lumRateCoinLabel")]
+		private IStaticText lumRateCoinLabel = null;
+
+		[MVControlReference("effectiveCRateLabel")]
+		private IStaticText effectiveCRateLabel = null;
+
+        [MVControlReference("effectiveLRateLabel")]
+		private IStaticText effectiveLRateLabel = null;
+
+		[MVControlReference("timeLabel")]
+		private IStaticText timeLabel = null;
+
+		[MVControlReference("convRateInput")]
+		private ITextBox convRateInput = null;
+
+        [MVControlReference("convRateLInput")]
+		private ITextBox convRateLInput = null;
+
+        [MVControlReference("pollRateInput")]
+		private ITextBox pollRateInput = null;
+
+        [MVControlReference("coinRateLumLabel")]
+        private IStaticText coinRateLumLabel = null;
+
+        [MVControlReference("atcCurLbl")]
+        private IStaticText atcCurLbl = null;
+
+        [MVControlReference("coinBankBtn")]
+		private IButton coinBankBtn = null;
+    
+        [MVControlReference("autoResetBtn")]
+        private IButton autoResetBtn = null;
+
+        [MVControlReference("calcEnableBtn")]
+        private IButton calcEnableBtn = null;
+
+        [MVControlReference("luminKillLabel")]
+        private IStaticText luminKillLabel = null;
+
+        [MVControlReference("luminOtherlLabel")]
+        private IStaticText luminOtherlLabel = null;
+
+        [MVControlReference("KillLabel")]
+        private IStaticText KillLabel = null;
+
+        [MVControlReference("KillHrLabel")]
+        private IStaticText KillHrLabel = null;
+
+        [MVControlReference("coinRateKillLumLabel")]
+        private IStaticText coinRateKillLumLabel = null;
+
+        [MVControlReference("effectiveKillRateLabel")]
+        private IStaticText effectiveKillRateLabel = null;
+
+        [MVControlReference("luminKillRateLabel")]
+        private IStaticText luminKillRateLabel = null;
+
+        [MVControlReference("luminOtherRateLabel")]
+        private IStaticText luminOtherRateLabel = null;
+
+        [MVControlReference("coinRateOtherLumLabel")]
+        private IStaticText coinRateOtherLumLabel = null;
+
+        [MVControlReference("effectiveOtherRateLabel")]
+        private IStaticText effectiveOtherRateLabel = null;
+	}
+}
+
+/*
+
+[BANK] Your balances are:
+[BANK] Pyreals: 834,533,210
+[BANK] Luminance: 25,636,958,920
+[BANK] Legendary Keys: 46
+[BANK] Mythical Keys: 751
+[BANK] Enlightened Coins: 586
+[BANK] Weakly Enlightened Coins: 6
+*/
