@@ -7,3 +7,7 @@ Console Commands: <br />
 /mlt debug <br />
  <br />
 if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can
+<br />
+<br />
+**Change log:**
+5/17/25 - Fixed calculations for conversions and added reporting.
