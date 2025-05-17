@@ -33,6 +33,16 @@
                 <control progid="DecalControls.StaticText" name="effectiveOtherRateLabel" left="5" top="185" width="180" height="20" text="Effective O: 0"/>
             </control>
         </page>
+        <page label="Report">
+            <control progid="DecalControls.FixedLayout" clipped="">
+                <control progid="DecalControls.StaticText" name="reportlbl" left="5" top="5" width="180" height="20" text="     REPORTS     "/>
+                <control progid="DecalControls.PushButton" name="reportLumBtn" left="5" top="25" width="40" height="20" text="Lum"/>
+                <control progid="DecalControls.PushButton" name="reportLumEBtn" left="55" top="25" width="40" height="20" text="Lum E"/>
+                <control progid="DecalControls.PushButton" name="reportCoinBtn" left="5" top="50" width="40" height="20" text="Coin"/>
+                <control progid="DecalControls.PushButton" name="reportCoinEBtn" left="55" top="50" width="40" height="20" text="Coin E"/>
+                <control progid="DecalControls.PushButton" name="reportKillBtn" left="5" top="75" width="40" height="20" text="Kills"/>
+            </control>
+        </page>
         <page label="Config">
             <control progid="DecalControls.FixedLayout" clipped="">
                 <control progid="DecalControls.StaticText" name="ConversionLbl" left="0" top="5" width="200" height="20" text="Lum-Coin  Coin-Lum in mil lum"/>

@@ -67,6 +67,7 @@ namespace MelksLuminanceTracker
         private double coinRateLum = 0;
         private double lumRateCoin = 0;
         private double lumdiff = 0;
+        private double coindiff = 0;
         private double luminkillRate = 0;
         private double luminOtherRate = 0;
         private double coinRateKillLum = 0;
@@ -368,33 +369,35 @@ namespace MelksLuminanceTracker
                 if (enbDebug){Util.WriteToChat($"doCalcs progenable = {progenable}.");}
                 if (!progenable){ return;}
                 // Luminance per hour
-                luminRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance) / hours, 1) : 0;
-                lumdiff = currentLuminance - initialLuminance;
+                lumdiff = currentLuminance - initialLuminance;    
+                luminRate = hours > 0 ? Math.Round(lumdiff / hours, 1) : 0;                            
                 if (coinusebank){
-    		        coinRate = hours > 0 ? Math.Round((currentCoins - initialCoins) / hours, 1) : 0;}
+                    coindiff = currentCoins - initialCoins;}
                 else {
-                    coinRate = hours > 0 ? Math.Round(currentcoincount / hours, 1) : 0;}
-                // coins per hour from luminance
-                coinRateLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance) / hours / conversionCRate)) : 0;
-	            effectiveCRate = coinRate + coinRateLum;
+                    coindiff = currentcoincount;}
+	            coinRate = hours > 0 ? Math.Round(coindiff / hours, 1) : 0;
+                effectiveCRate = coinRate + coinRateLum;
                 // Lum per hour from Coins
-                if (coinusebank){
-                    lumRateCoin =  hours > 0 ? Math.Round((currentCoins / hours / conversionCRate)) : 0;}
-                else {
-                    lumRateCoin =  hours > 0 ? Math.Round((currentcoincount / hours * conversionLRate), 1) : 0;
-                }
+                coinRateLum = hours > 0 ? Math.Round((luminRate / conversionLRate)) : 0;
+                lumRateCoin =  hours > 0 ? Math.Round((coinRate * conversionCRate), 1) : 0;
                 effectiveLRate = luminRate + lumRateCoin;
                 // Other Luminance
                 otherLuminance = lumdiff - killLuminance;
                 if (otherLuminance < 0){otherLuminance=0;}
                 
                 // Luminance hr rates for kill/other
-                luminkillRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance - otherLuminance) / hours, 1) : 0;
-                luminOtherRate = hours > 0 ? Math.Round((currentLuminance - initialLuminance - killLuminance) / hours, 1) : 0;
-                coinRateKillLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance - otherLuminance) / hours / conversionCRate)) : 0;
-                coinRateOtherLum = hours > 0 ? Math.Round(((currentLuminance - initialLuminance - killLuminance) / hours / conversionCRate)) : 0;
+                luminkillRate = hours > 0 ? Math.Round((lumdiff - otherLuminance) / hours, 1) : 0;
+                luminOtherRate = hours > 0 ? Math.Round((lumdiff - killLuminance) / hours, 1) : 0;
+                coinRateKillLum = hours > 0 ? Math.Round((luminkillRate / conversionCRate)) : 0;
+                coinRateOtherLum = hours > 0 ? Math.Round((luminOtherRate / hours / conversionCRate)) : 0;
                 effectivekillRate = coinRate + coinRateKillLum;
                 effectiveOtherRate = coinRate + coinRateOtherLum;
+
+                if (effectiveOtherRate < 0){effectiveOtherRate=0;}
+                if (luminOtherRate < 0){luminOtherRate=0;}
+                if (luminkillRate < 0){luminkillRate=0;}
+                if (coinRateKillLum < 0){coinRateKillLum=0;}
+                if (coinRateOtherLum < 0){coinRateOtherLum=0;}
 
                 tmplumcurstr = StrValUpdate(currentLuminance);
                 tmplumstr = StrValUpdate(luminRate);
@@ -407,24 +410,7 @@ namespace MelksLuminanceTracker
             }
             catch (Exception ex) {Util.WriteToChat($"doCalcs Error: {ex}");}
         }
-
-        private void pollrtchng()
-        {
-            try
-			{   
-                if (pollRateInput.Text == null) {pollRate = 1;}
-                else{
-                    int.TryParse(pollRateInput.Text, out pollRate);
-                }
-                if (pollRate < 1){pollRate = 1;}
-                pollTimer?.Stop();
-                pollTimer.Interval = pollRate * 60000;
-                pollTimer.Start();
-                Util.WriteToChat("Updated Poll Rate Minutes: " + pollTimer.Interval);
-            }
-            catch (Exception ex) {Util.WriteToChat($"pollrtchng Error: {ex}");}
-		}
-    
+        
         [MVControlEvent("resetBtn", "Click")]
 		void reset_Btn_Click(object sender, MVControlEventArgs e)
 		{
@@ -489,7 +475,15 @@ namespace MelksLuminanceTracker
 			try
 			{
                 if (!isinitialized) {return;}
-                pollrtchng();
+                if (pollRateInput.Text == null) {pollRate = 1;}
+                else{
+                    int.TryParse(pollRateInput.Text, out pollRate);
+                }
+                if (pollRate < 1){pollRate = 1;}
+                pollTimer?.Stop();
+                pollTimer.Interval = pollRate * 60000;
+                pollTimer.Start();
+                Util.WriteToChat("Updated Poll Rate Minutes: " + pollTimer.Interval);
             }
 			catch (Exception ex) {Util.WriteToChat($"UpdatePoll Error: {ex}");}
 		}
@@ -520,7 +514,7 @@ namespace MelksLuminanceTracker
 		}
 
         [MVControlEvent("calcEnableBtn", "Click")]
-		void calcEnableBtn_Change(object sender, MVControlEventArgs e)
+		void calcEnableBtn_Click(object sender, MVControlEventArgs e)
 		{
 			try
 			{
@@ -531,9 +525,92 @@ namespace MelksLuminanceTracker
                 totalReset();
                     
 			}
-			catch (Exception ex) {Util.WriteToChat($"calcEnableBtn_Change Error: {ex}");}
+			catch (Exception ex) {Util.WriteToChat($"calcEnableBtn_Click Error: {ex}");}
 		}
         
+        [MVControlEvent("reportLumBtn", "Click")]
+		void reportLumBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("Lum");
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportLumBtn_Click Error: {ex}");}
+		}
+
+        [MVControlEvent("reportLumEBtn", "Click")]
+		void reportLumEBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("LumE");                    
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportLumEBtn_Click Error: {ex}");}
+		}
+
+        [MVControlEvent("reportCoinBtn", "Click")]
+		void reportCoinBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("Coin");                    
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportCoinBtn_Click Error: {ex}");}
+		}
+
+        [MVControlEvent("reportCoinEBtn", "Click")]
+		void reportCoinEBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("CoinE");                    
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportCoinEBtn_Click Error: {ex}");}
+		}
+        
+        [MVControlEvent("reportKillBtn", "Click")]
+		void reportKillBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("Kill");                    
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportKillBtn_Click Error: {ex}");}
+		}
+
+        private void reportsOutput(string rpt)  // Skippy's : You've gained 5,245,917 luminance in 15 seconds for 1,251,167,121 luminance per hour.
+        {
+            if (rpt == "Lum") 
+            {
+                Util.WriteToChat($"You gained {lumdiff:n} Luminance in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {luminRate:n} Luminance per hour.");
+            }
+            if (rpt == "LumE") 
+            {
+                Util.WriteToChat($"You gained {lumdiff:n} Luminance in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {luminRate:n} Luminance per hour.");
+                Util.WriteToChat($"You are earning {lumRateCoin:n} Luminance from Coins per hour");
+                Util.WriteToChat($"Your effective Luminance per hour is : {effectiveLRate:n}");
+            }
+            if (rpt == "Coin") 
+            {
+                Util.WriteToChat($"You gained {coindiff:n} Coins in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {coinRate} Coins per hour.");
+            }
+            if (rpt == "CoinE") 
+            {
+                Util.WriteToChat($"You gained {coindiff:n} Coins in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {coinRate} Coins per hour.");
+                Util.WriteToChat($"You are earning {coinRateLum} Coins from Luminancer per hour");
+                Util.WriteToChat($"Your effective Coins per hour is : {effectiveCRate:n}");
+            }
+            if (rpt == "Kill") 
+            {
+                Util.WriteToChat($"You have killed {killsTotal} creatures in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {killsperhr} per hour.");
+            }
+        }
+
         [BaseEvent("ChatBoxMessage")]
         private void  Current_ChatBoxMessage(object sender, ChatTextInterceptEventArgs e)
         {
@@ -594,7 +671,7 @@ namespace MelksLuminanceTracker
                     bool isTrinket = Regex.IsMatch(checkstr, @"gives you ancient empyrean trinket.$");
                     if (isAetheria){curAetheria += 1;}
                     if (isTrinket) {curTrinket += 1;}
-                }                
+                }
             }
             catch (Exception ex)
             {
@@ -644,10 +721,16 @@ namespace MelksLuminanceTracker
                     Util.WriteToChat("/mlt stop");
                     Util.WriteToChat("/mlt start");
                     Util.WriteToChat("/mlt debug");
+                    Util.WriteToChat("/mlt report lum");
+                    Util.WriteToChat("/mlt report lume");
+                    Util.WriteToChat("/mlt report coin");
+                    Util.WriteToChat("/mlt report coine");
+                    Util.WriteToChat("/mlt report kills");
                     Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
+                    Util.WriteToChat("The Coin-Lum Conversion value is the amount of luminance you get for 1 coin.");
                     Util.WriteToChat("It will calculate how many coins/hr you make just from luminance.");
-                    Util.WriteToChat("The Auto Reset button enables/disables resetting all values automatically when there is a transfer of Lum or Coins");
-                    Util.WriteToChat("The Coin by Bank checkbox uses the coins in your bank to calculate your hourly coins gained instead of atheria/trinket pickups");
+                    Util.WriteToChat("The Auto Reset button enables/disables resetting all values automatically when there is a transfer of Lum or Coins or spending of luminance");
+                    Util.WriteToChat("The Coin by Bank button uses the coins in your bank to calculate your hourly coins gained instead of atheria/trinket pickups");
                     Util.WriteToChat("The program Automatically polls the bank every minute but hides the output.");
                     Util.WriteToChat("the q/b button also polls the bank to update values and hides the output");
                     return;
@@ -673,6 +756,30 @@ namespace MelksLuminanceTracker
                 {
                     enbDebug = !enbDebug;
                     Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
+                }
+                if (tokens[1].ToLower() == "report")
+                {
+                    if (tokens.Length < 3 ){return;}
+                    if (tokens[2].ToLower() == "lum")
+                    {
+                        reportsOutput("Lum");
+                    }
+                    if (tokens[2].ToLower() == "lume")
+                    {
+                        reportsOutput("LumE");
+                    }
+                    if (tokens[2].ToLower() == "coin")
+                    {
+                        reportsOutput("Coin");
+                    }
+                    if (tokens[2].ToLower() == "coine")
+                    {
+                        reportsOutput("CoinE");
+                    }
+                    if (tokens[2].ToLower() == "kills")
+                    {
+                        reportsOutput("Kill");
+                    }
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
