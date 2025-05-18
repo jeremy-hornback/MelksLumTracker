@@ -814,13 +814,7 @@ namespace MelksLuminanceTracker
                     if (tokens[2].ToLower() == "coine")
                     {
                         reportsOutput("CoinE");
-                    }
-                    
-                }
-                if (tokens[1].ToLower() == "debug")
-                {
-                    enbDebug = !enbDebug;
-                    Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
+                    }                    
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
