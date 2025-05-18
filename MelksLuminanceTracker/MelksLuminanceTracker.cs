@@ -217,10 +217,19 @@ namespace MelksLuminanceTracker
             try
 			{
                 if (enbDebug){Util.WriteToChat("QuickUpdateUI Entry.");}
-                if (enbDebug){Util.WriteToChat($"pollTimer Status: {pollTimer.ToString()}");}
                 if (initialCoins == -1 || initialLuminance == -1) {return;}
                 doCalcs();
-                
+                updateGUI();                
+            }
+            catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
+        }
+
+        private void updateGUI()
+        {   
+            try
+			{
+                if (enbDebug){Util.WriteToChat("updateGUI Entry.");}
+                if (enbDebug){Util.WriteToChat($"pollTimer Status: {pollTimer.ToString()}");}
                 luminCurrentLabel.Text = $"[Bank] Luminance: {tmplumcurstr}";
                 coinCurrentLabel.Text = $"[Bank] Coins: {currentCoins}";
                 timeLabel.Text = $"Time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}";
@@ -450,6 +459,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
                 bankPoll(true);
+                updateGUI();
             }
 			catch (Exception ex) {Util.WriteToChat($"bankButton_Click Error: {ex}");}
 		}
@@ -461,6 +471,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
                 bankPoll(false);
+                updateGUI();
             }
 			catch (Exception ex) {Util.WriteToChat($"bankButton_Click Error: {ex}");}
 		}
@@ -656,7 +667,9 @@ namespace MelksLuminanceTracker
                     eatbank = false; 
                     bankdata = false;
                     clrTimer.Stop();
+                    if (!progenable){ return;}
                     doCalcs();
+                    updateGUI();
                 }
                 if (autoResetEnabled){
                     bool isAugUsage= false;
