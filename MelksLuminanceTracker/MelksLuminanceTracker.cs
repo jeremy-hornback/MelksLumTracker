@@ -775,11 +775,25 @@ namespace MelksLuminanceTracker
                 }
                 if (tokens[1].ToLower() == "debug")
                 {
-                    enbDebug = !enbDebug;
+                    if (tokens.Length < 3 )
+                    {
+                        enbDebug = !enbDebug;
+                        Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
+                        return;
+                    }
+                    if ((tokens[2].ToLower() == "true") || (tokens[2].ToLower() == "on"))
+                    {
+                        enbDebug = true;
+                    }
+                    if ((tokens[2].ToLower() == "false") || (tokens[2].ToLower() == "off"))
+                    {
+                        enbDebug = false;
+                    }
                     Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
                 }
                 if (tokens[1].ToLower() == "silentpoll")
                 {
+                    if (enbDebug){Util.WriteToChat($"silentpoll Activated");}
                     bankPoll(true);
                 }
                 if (tokens[1].ToLower() == "report")
