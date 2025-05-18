@@ -453,9 +453,16 @@ namespace MelksLuminanceTracker
                 if ((xpToLevel > 0) && (xpRate > 0))
                 {
                     double xplvlrate = xpToLevel / xpRate;
+                    double tmphrs;
+                    double tmpmin;
                     if (enbDebug){Util.WriteToChat($"XP To Level Rate = {xplvlrate}.");}
-                    double tmphrs = xplvlrate % 1;
-                    double tmpmin = (xplvlrate % 1) * 60;
+                    if (xplvlrate >= 1) {
+                        tmphrs = xplvlrate % 1;
+                        tmpmin = (xplvlrate - (xplvlrate % 1)) * 60;
+                    } else {
+                        tmphrs = 0;
+                        tmpmin = xplvlrate * 60;
+                    }
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
