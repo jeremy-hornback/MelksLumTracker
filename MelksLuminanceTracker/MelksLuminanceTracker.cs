@@ -76,6 +76,10 @@ namespace MelksLuminanceTracker
         private double effectiveOtherRate = 0;
         private double killsperhr = 0;
         private double killsTotal = 0;
+        private double xpCur = -1;
+        private double xpRate = 0;
+        private double xpInitVal = -1;
+        private double xpDiff = 0;
         private TimeSpan elapsed;
 		private DateTime startTime;
         private int pollRate = 1;
@@ -99,6 +103,7 @@ namespace MelksLuminanceTracker
         private string tmpotherumratestr = "0";
         private string tmpeffectiveLRate = "0";
         private string tmplumRateCoin = "0";
+        private string tmpXPRate = "0";
         //PopoutWindow tempPopoutwindow = new PopoutWindow();
 
 		protected override void Startup()
@@ -251,6 +256,7 @@ namespace MelksLuminanceTracker
                 luminOtherRateLabel.Text = $"Lum/hr O: {tmpotherumratestr}";
                 coinRateOtherLumLabel.Text = $"Lum-Coins/hr O: {coinRateOtherLum}";
                 effectiveOtherRateLabel.Text = $"Effective O: {effectiveOtherRate}";
+                xpRateLabel.Text = $"XP/hr: {tmpXPRate}";
             }
             catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
         }
@@ -267,12 +273,24 @@ namespace MelksLuminanceTracker
                     tmpval = Math.Round(tmpval, 3);
                     tmpvalstr = $"{tmpval} Mil";
                 }
-                else if (tmpval > 1000000000)
+                else if ((tmpval >= 1000000000) && (tmpval < 1000000000000))
                 {
                     tmpval = tmpval / 1000000000;
                     tmpval = Math.Round(tmpval, 3); 
                     tmpvalstr = $"{tmpval} Bil";
                 }
+                else if ((tmpval >= 1000000000000) && (tmpval < 1000000000000000))
+                {
+                    tmpval = tmpval / 1000000000000;
+                    tmpval = Math.Round(tmpval, 3); 
+                    tmpvalstr = $"{tmpval} Tril";
+                }
+                else if (tmpval >= 1000000000000000)
+                {
+                    tmpval = tmpval / 1000000000000000;
+                    tmpval = Math.Round(tmpval, 3); 
+                    tmpvalstr = $"{tmpval} Quad";
+                }                
                 return tmpvalstr;
 			}
 			catch (Exception ex) {Util.WriteToChat($"StrValUpdate Error: {ex}");}
@@ -286,12 +304,25 @@ namespace MelksLuminanceTracker
 			    luminCurrentLabel.Text = "[Bank] Luminance: 0";
 			    coinCurrentLabel.Text = "[Bank] Coins: 0";
                 luminRateLabel.Text = "Lum/hr: 0";
-			    coinRateLabel.Text = "Coins/hr: 0";
+				coinRateLabel.Text = "Coins/hr: 0";
                 coinRateLumLabel.Text = "Lum-Coins/hr: 0";
                 lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
-			    effectiveCRateLabel.Text = "Effective C/hr: 0";
-			    effectiveLRateLabel.Text = "Effective L/hr: 0";
-			    timeLabel.Text = "Time: 00:00";          
+				effectiveCRateLabel.Text = "Effective C/hr: 0";
+				effectiveLRateLabel.Text = "Effective L/hr: 0";
+				timeLabel.Text = "Time: 00:00";          
+                
+                KillLabel.Text = "Kills: 0";
+                KillHrLabel.Text = "Kills/hr: 0";
+                luminKillLabel.Text = "Kill Lum: 0";
+                luminOtherlLabel.Text = "Other Lum: 0";
+                luminKillRateLabel.Text = "Lum/hr K: 0";
+                luminOtherRateLabel.Text = "Lum/hr O: 0";
+                coinRateKillLumLabel.Text = "Lum-Coins/hr K: 0";
+                coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
+                effectiveKillRateLabel.Text = "Effective K: 0";
+                effectiveOtherRateLabel.Text = "Effective O: 0";
+                xpRateLabel.Text = "XP/hr: 0";
+                atcCurLbl.Text = "A: 0 T: 0 C: 0";
 		    }
 		    catch (Exception ex) {Util.WriteToChat($"initControls Error: {ex}");}
 		}
@@ -325,6 +356,7 @@ namespace MelksLuminanceTracker
                 if (enbDebug){Util.WriteToChat("totalReset Entry.");}
                 initialCoins = -1;
 				initialLuminance = -1;
+                xpInitVal = -1;
                 currentcoincount = 0;
                 curAetheria = 0;
                 curTrinket = 0;
@@ -338,6 +370,9 @@ namespace MelksLuminanceTracker
                 effectivekillRate = 0;
                 killsperhr = 0;
                 killsTotal = 0;
+                xpCur = 0;
+                xpRate = 0;
+                xpDiff = 0;
                 
 				startTime = DateTime.Now;
                 
@@ -359,6 +394,7 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
+                xpRateLabel.Text = "XP/hr: 0";
                 atcCurLbl.Text = "A: 0 T: 0 C: 0";
                 if (!progenable){ return;}
                 bankPoll(true);				
@@ -383,11 +419,20 @@ namespace MelksLuminanceTracker
                     }
                 }
                 killsperhr = hours > 0 ? Math.Round(killsTotal / hours) : 0;
+                if (xpInitVal == -1)
+                {
+                    xpInitVal = CoreManager.Current.CharacterFilter.TotalXP; //CoreManager.Current.CharacterFilter.UnassignedXP 
+                    xpCur = xpInitVal;
+                    xpRate = 0;
+                }
+                xpCur = CoreManager.Current.CharacterFilter.TotalXP;
+                xpDiff = xpCur - xpInitVal;
+                xpRate = hours > 0 ? Math.Round(xpDiff / hours, 1) : 0;
                 if (enbDebug){Util.WriteToChat($"doCalcs progenable = {progenable}.");}
                 if (!progenable){ return;}
                 // Luminance per hour
                 lumdiff = currentLuminance - initialLuminance;    
-                luminRate = hours > 0 ? Math.Round(lumdiff / hours, 1) : 0;                            
+                luminRate = hours > 0 ? Math.Round(lumdiff / hours, 1) : 0;
                 if (coinusebank){
                     coindiff = currentCoins - initialCoins;}
                 else {
@@ -424,6 +469,7 @@ namespace MelksLuminanceTracker
                 tmpotherumratestr = StrValUpdate(luminOtherRate);
                 tmpeffectiveLRate = StrValUpdate(effectiveLRate);
                 tmplumRateCoin = StrValUpdate(lumRateCoin);
+                tmpXPRate = StrValUpdate(xpRate);
             }
             catch (Exception ex) {Util.WriteToChat($"doCalcs Error: {ex}");}
         }
@@ -601,6 +647,17 @@ namespace MelksLuminanceTracker
 			catch (Exception ex) {Util.WriteToChat($"reportKillBtn_Click Error: {ex}");}
 		}
 
+        [MVControlEvent("reportXPBtn", "Click")]
+		void reportXPBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                reportsOutput("XP");                    
+			}
+			catch (Exception ex) {Util.WriteToChat($"reportKillBtn_Click Error: {ex}");}
+		}
+
         private void reportsOutput(string rpt)  // Skippy's : You've gained 5,245,917 luminance in 15 seconds for 1,251,167,121 luminance per hour.
         {
             if (rpt == "Lum") 
@@ -610,7 +667,7 @@ namespace MelksLuminanceTracker
             if (rpt == "LumE") 
             {
                 Util.WriteToChat($"You gained {lumdiff:n} Luminance in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {luminRate:n} Luminance per hour.");
-                Util.WriteToChat($"You are earning {lumRateCoin:n} Luminance from Coins per hour");
+                Util.WriteToChat($"You are earning {lumRateCoin:n} Luminance from Coins per hour @ {conversionLRate} per coin");
                 Util.WriteToChat($"Your effective Luminance per hour is : {effectiveLRate:n}");
             }
             if (rpt == "Coin") 
@@ -620,12 +677,17 @@ namespace MelksLuminanceTracker
             if (rpt == "CoinE") 
             {
                 Util.WriteToChat($"You gained {coindiff:n} Coins in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {coinRate} Coins per hour.");
-                Util.WriteToChat($"You are earning {coinRateLum} Coins from Luminancer per hour");
+                Util.WriteToChat($"You are earning {coinRateLum} Coins from Luminancer per hour @ {conversionCRate} per coin");
                 Util.WriteToChat($"Your effective Coins per hour is : {effectiveCRate:n}");
             }
             if (rpt == "Kill") 
             {
-                Util.WriteToChat($"You have killed {killsTotal} creatures in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {killsperhr} per hour.");
+                Util.WriteToChat($"You have killed {killsTotal} creatures in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {killsperhr} Kills per hour.");
+            }
+            if (rpt == "XP")
+            {
+                string tmpxpdiff = StrValUpdate(xpDiff);
+                Util.WriteToChat($"You have earned {tmpxpdiff} XP in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {tmpXPRate} XP per hour.");
             }
         }
 
@@ -814,7 +876,11 @@ namespace MelksLuminanceTracker
                     if (tokens[2].ToLower() == "coine")
                     {
                         reportsOutput("CoinE");
-                    }                    
+                    }
+                    if (tokens[2].ToLower() == "xp")
+                    {
+                        reportsOutput("XP");
+                    }       
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
@@ -897,6 +963,9 @@ namespace MelksLuminanceTracker
 
         [MVControlReference("effectiveOtherRateLabel")]
         private IStaticText effectiveOtherRateLabel = null;
+
+        [MVControlReference("xpRateLabel")]
+        private IStaticText xpRateLabel = null;
 	}
 }
 
