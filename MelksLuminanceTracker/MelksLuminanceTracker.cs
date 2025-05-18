@@ -137,12 +137,17 @@ namespace MelksLuminanceTracker
 				Util.WriteToChat("Melks Luminance Tracker Started");
                 Util.WriteToChat("to see possible commands type /mlt help");				
 				startTime = DateTime.Now;
-				pollTimer = new System.Timers.Timer(60000);
-                updateTimer = new System.Timers.Timer(5000);
-                clrTimer = new System.Timers.Timer(2000);
-                updateTimer.Elapsed += QuickUpdateUI;
-				pollTimer.Elapsed += UpdateUI;
-                clrTimer.Elapsed += eatClear;                
+				pollTimer = new System.Timers.Timer();
+                updateTimer = new System.Timers.Timer();
+                clrTimer = new System.Timers.Timer();
+				pollTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateUI);
+                updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(QuickUpdateUI);
+                clrTimer.Elapsed += new System.Timers.ElapsedEventHandler(eatClear);
+                pollTimer.Interval = 60000;
+                updateTimer.Interval = 5000;
+                clrTimer.Interval = 2000;
+                pollTimer.AutoReset = true;
+                pollTimer.Enabled = true;                
                 pollTimer.Start();
                 updateTimer.Start();
                 updateconversion();
@@ -175,10 +180,10 @@ namespace MelksLuminanceTracker
 			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_Logoff Error: {ex}");}
 		}
 
-        private void UpdateUI(object sender, EventArgs e)
+        private void UpdateUI(Object source, System.Timers.ElapsedEventArgs e)
 		{
 			try
-			{
+			{                
                 if (enbDebug){Util.WriteToChat($"UpdateUI Before progenable: {progenable}");}
                 if (!progenable){return;}
                 bankPoll(true);
@@ -212,6 +217,7 @@ namespace MelksLuminanceTracker
             try
 			{
                 if (enbDebug){Util.WriteToChat("QuickUpdateUI Entry.");}
+                if (enbDebug){Util.WriteToChat($"pollTimer Status: {pollTimer.ToString()}");}
                 if (initialCoins == -1 || initialLuminance == -1) {return;}
                 doCalcs();
                 
@@ -297,8 +303,8 @@ namespace MelksLuminanceTracker
                 }
                 conversionCRate = conversionCRate * 1000000;
                 conversionLRate = conversionLRate * 1000000;
-                Util.WriteToChat($"Conversion Rate set to {conversionCRate} Coins per Luminance");
-                Util.WriteToChat($"Conversion Rate set to {conversionLRate} Luminance per coin");
+                Util.WriteToChat($"Conversion Rate set to {conversionCRate:n} Coins per Luminance");
+                Util.WriteToChat($"Conversion Rate set to {conversionLRate:n} Luminance per coin");
             }
             catch (Exception ex) {Util.WriteToChat($"updateconversion Error: {ex}");}
 		}
@@ -314,6 +320,8 @@ namespace MelksLuminanceTracker
                 curAetheria = 0;
                 curTrinket = 0;
                 killLuminance = 0;
+                lumdiff = 0;
+                coindiff = 0;
                 luminkillRate = 0;
                 luminOtherRate = 0;
                 coinRateKillLum = 0;
@@ -483,7 +491,7 @@ namespace MelksLuminanceTracker
                 pollTimer?.Stop();
                 pollTimer.Interval = pollRate * 60000;
                 pollTimer.Start();
-                Util.WriteToChat("Updated Poll Rate Minutes: " + pollTimer.Interval);
+                Util.WriteToChat("Updated Poll Rate Minutes: " + pollRate);
             }
 			catch (Exception ex) {Util.WriteToChat($"UpdatePoll Error: {ex}");}
 		}
@@ -495,7 +503,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
 				coinusebank = !coinusebank;
-                Util.WriteToChat($"{coinusebank}");
+                Util.WriteToChat($"Coin By Bank set to: {coinusebank}");
                 coinBankBtn.Text = $"Coin by Bank: {(coinusebank ? "On" : "Off")}";
 			}
 			catch (Exception ex) {Util.WriteToChat($"coinBankBtn_Click Error: {ex}");}
@@ -523,7 +531,6 @@ namespace MelksLuminanceTracker
                 Util.WriteToChat($"Program Enable: {progenable}");
                 calcEnableBtn.Text = $"{(progenable ? "Enabled" : "Disabled")}";
                 totalReset();
-                    
 			}
 			catch (Exception ex) {Util.WriteToChat($"calcEnableBtn_Click Error: {ex}");}
 		}
@@ -726,6 +733,7 @@ namespace MelksLuminanceTracker
                     Util.WriteToChat("/mlt report coin");
                     Util.WriteToChat("/mlt report coine");
                     Util.WriteToChat("/mlt report kills");
+                    Util.WriteToChat("/mlt silentpoll");
                     Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
                     Util.WriteToChat("The Coin-Lum Conversion value is the amount of luminance you get for 1 coin.");
                     Util.WriteToChat("It will calculate how many coins/hr you make just from luminance.");
@@ -776,10 +784,15 @@ namespace MelksLuminanceTracker
                     {
                         reportsOutput("CoinE");
                     }
-                    if (tokens[2].ToLower() == "kills")
+                    if (tokens[2].ToLower() == "silentpoll")
                     {
-                        reportsOutput("Kill");
+                        bankPoll(true);
                     }
+                }
+                if (tokens[1].ToLower() == "debug")
+                {
+                    enbDebug = !enbDebug;
+                    Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
