@@ -17,4 +17,5 @@ if you are having issues, turn on debugging and pm me on discord with your issue
 <br />
 <br />
 **Change log:**
+5/18/25 - Added XP Tab
 5/17/25 - Fixed calculations for conversions and added reporting.
