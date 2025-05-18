@@ -80,7 +80,9 @@ namespace MelksLuminanceTracker
         private double xpRate = 0;
         private double xpInitVal = -1;
         private double xpDiff = 0;
+        private double xpToLevel = 0;
         private TimeSpan elapsed;
+        private TimeSpan timetolvl;
 		private DateTime startTime;
         private int pollRate = 1;
 		private System.Timers.Timer pollTimer;
@@ -90,6 +92,7 @@ namespace MelksLuminanceTracker
         private bool coinusebank = false;
         private bool progenable = true;
         private bool eatbank = false;
+        private bool eatxp = false;
         private bool bankdata = false;
         private bool isinitialized = false;
         private bool enbDebug = false;
@@ -104,6 +107,9 @@ namespace MelksLuminanceTracker
         private string tmpeffectiveLRate = "0";
         private string tmplumRateCoin = "0";
         private string tmpXPRate = "0";
+        private string tmpxpdiff = "0";
+        private string tmpXPtoLevel = "0";
+        private string tmpXPTotal = "0";
         //PopoutWindow tempPopoutwindow = new PopoutWindow();
 
 		protected override void Startup()
@@ -179,8 +185,7 @@ namespace MelksLuminanceTracker
                 updateTimer?.Dispose();
 				pollTimer = null;
                 clrTimer = null;
-                updateTimer = null;
-                
+                updateTimer = null;                
 			}
 			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_Logoff Error: {ex}");}
 		}
@@ -201,8 +206,10 @@ namespace MelksLuminanceTracker
         {
             if (enbDebug){Util.WriteToChat($"Bank Poll Entry. EB = {eb}");}
             if (!isinitialized) {return;}
-            eatbank = eb;
+            eatbank = eb;            
             clrTimer.Start();
+            eatxp = true;
+            CoreManager.Current.Actions.InvokeChatParser("/xp");  
             CoreManager.Current.Actions.InvokeChatParser("/b");
         }
 
@@ -235,6 +242,7 @@ namespace MelksLuminanceTracker
 			{
                 if (enbDebug){Util.WriteToChat("updateGUI Entry.");}
                 if (enbDebug){Util.WriteToChat($"pollTimer Status: {pollTimer.ToString()}");}
+                //Main Tab
                 luminCurrentLabel.Text = $"[Bank] Luminance: {tmplumcurstr}";
                 coinCurrentLabel.Text = $"[Bank] Coins: {currentCoins}";
                 timeLabel.Text = $"Time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}";
@@ -245,7 +253,7 @@ namespace MelksLuminanceTracker
 				effectiveCRateLabel.Text = $"Effective C/hr: {effectiveCRate}";
 				effectiveLRateLabel.Text = $"Effective L/hr: {tmpeffectiveLRate}";
                 atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount}";
-                
+                //Spec Tab
                 KillLabel.Text = $"Kills: {killsTotal}";
                 KillHrLabel.Text = $"Kills/hr: {killsperhr}";
                 luminKillLabel.Text = $"Kill Lum: {tmpkilllumcurstr}";
@@ -256,7 +264,12 @@ namespace MelksLuminanceTracker
                 luminOtherRateLabel.Text = $"Lum/hr O: {tmpotherumratestr}";
                 coinRateOtherLumLabel.Text = $"Lum-Coins/hr O: {coinRateOtherLum}";
                 effectiveOtherRateLabel.Text = $"Effective O: {effectiveOtherRate}";
+                //XP Tab
+                xpTotalLabel.Text = $"Total XP: {tmpXPTotal}";
+                xpEarnedLabel.Text = $"Earned XP: {tmpxpdiff}";
                 xpRateLabel.Text = $"XP/hr: {tmpXPRate}";
+                xpToLvlLabel.Text = $"XP to Level: {tmpXPtoLevel}";
+                xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.Hours:D2}:{timetolvl.Minutes:D2}";
             }
             catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
         }
@@ -301,16 +314,15 @@ namespace MelksLuminanceTracker
 		{
 		    try
 		    {
-			    luminCurrentLabel.Text = "[Bank] Luminance: 0";
-			    coinCurrentLabel.Text = "[Bank] Coins: 0";
-                luminRateLabel.Text = "Lum/hr: 0";
+			    //Main Tab
+				luminRateLabel.Text = "Lum/hr: 0";
 				coinRateLabel.Text = "Coins/hr: 0";
                 coinRateLumLabel.Text = "Lum-Coins/hr: 0";
                 lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
 				effectiveCRateLabel.Text = "Effective C/hr: 0";
 				effectiveLRateLabel.Text = "Effective L/hr: 0";
 				timeLabel.Text = "Time: 00:00";          
-                
+                //Spec Tab
                 KillLabel.Text = "Kills: 0";
                 KillHrLabel.Text = "Kills/hr: 0";
                 luminKillLabel.Text = "Kill Lum: 0";
@@ -321,8 +333,13 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                xpRateLabel.Text = "XP/hr: 0";
                 atcCurLbl.Text = "A: 0 T: 0 C: 0";
+                //XP Tab
+                xpTotalLabel.Text = "Total XP: 0";
+                xpEarnedLabel.Text = "Earned XP: 0";
+                xpRateLabel.Text = "XP/hr: 0";
+                xpToLvlLabel.Text = "XP to Level: 0";
+                xpTimetoLvlLabel.Text = "Time to Lvl: 00:00";
 		    }
 		    catch (Exception ex) {Util.WriteToChat($"initControls Error: {ex}");}
 		}
@@ -375,7 +392,7 @@ namespace MelksLuminanceTracker
                 xpDiff = 0;
                 
 				startTime = DateTime.Now;
-                
+                //Main Tab
 				luminRateLabel.Text = "Lum/hr: 0";
 				coinRateLabel.Text = "Coins/hr: 0";
                 coinRateLumLabel.Text = "Lum-Coins/hr: 0";
@@ -383,7 +400,7 @@ namespace MelksLuminanceTracker
 				effectiveCRateLabel.Text = "Effective C/hr: 0";
 				effectiveLRateLabel.Text = "Effective L/hr: 0";
 				timeLabel.Text = "Time: 00:00";          
-                
+                //Spec Tab
                 KillLabel.Text = "Kills: 0";
                 KillHrLabel.Text = "Kills/hr: 0";
                 luminKillLabel.Text = "Kill Lum: 0";
@@ -394,8 +411,13 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                xpRateLabel.Text = "XP/hr: 0";
                 atcCurLbl.Text = "A: 0 T: 0 C: 0";
+                //XP Tab
+                xpTotalLabel.Text = "Total XP: 0";
+                xpEarnedLabel.Text = "Earned XP: 0";
+                xpRateLabel.Text = "XP/hr: 0";
+                xpToLvlLabel.Text = "XP to Level: 0";
+                xpTimetoLvlLabel.Text = "Time to Lvl: 00:00";
                 if (!progenable){ return;}
                 bankPoll(true);				
             }
@@ -428,6 +450,18 @@ namespace MelksLuminanceTracker
                 xpCur = CoreManager.Current.CharacterFilter.TotalXP;
                 xpDiff = xpCur - xpInitVal;
                 xpRate = hours > 0 ? Math.Round(xpDiff / hours, 1) : 0;
+                if ((xpToLevel > 0) && (xpRate > 0))
+                {
+                    double xplvlrate = xpToLevel / xpRate;
+                    if (enbDebug){Util.WriteToChat($"XP To Level Rate = {xplvlrate}.");}
+                    double tmphrs = xplvlrate % 1;
+                    double tmpmin = (xplvlrate % 1) * 60;
+                    TimeSpan tmptimehr;
+                    TimeSpan tmptimemin;
+                    tmptimehr = TimeSpan.FromHours(tmphrs);
+                    tmptimemin = TimeSpan.FromMinutes(tmpmin);
+                    timetolvl = tmptimehr + tmptimemin;
+                }
                 if (enbDebug){Util.WriteToChat($"doCalcs progenable = {progenable}.");}
                 if (!progenable){ return;}
                 // Luminance per hour
@@ -470,6 +504,9 @@ namespace MelksLuminanceTracker
                 tmpeffectiveLRate = StrValUpdate(effectiveLRate);
                 tmplumRateCoin = StrValUpdate(lumRateCoin);
                 tmpXPRate = StrValUpdate(xpRate);
+                tmpXPtoLevel = StrValUpdate(xpToLevel);
+                tmpXPTotal = StrValUpdate(xpCur);
+                tmpxpdiff = StrValUpdate(xpDiff);
             }
             catch (Exception ex) {Util.WriteToChat($"doCalcs Error: {ex}");}
         }
@@ -653,7 +690,7 @@ namespace MelksLuminanceTracker
 			try
 			{
                 if (!isinitialized) {return;}
-                reportsOutput("XP");                    
+                reportsOutput("XP");
 			}
 			catch (Exception ex) {Util.WriteToChat($"reportKillBtn_Click Error: {ex}");}
 		}
@@ -685,9 +722,9 @@ namespace MelksLuminanceTracker
                 Util.WriteToChat($"You have killed {killsTotal} creatures in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {killsperhr} Kills per hour.");
             }
             if (rpt == "XP")
-            {
-                string tmpxpdiff = StrValUpdate(xpDiff);
+            {                
                 Util.WriteToChat($"You have earned {tmpxpdiff} XP in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {tmpXPRate} XP per hour.");
+                Util.WriteToChat($"You Need: {tmpXPtoLevel} XP to level and will take {timetolvl.Hours:D2}:{timetolvl.Minutes:D2} at the current rate");
             }
         }
 
@@ -723,8 +760,18 @@ namespace MelksLuminanceTracker
                     killLuminance += double.Parse(Regex.Match(checkstr, @"\d+").Value);
                     killsTotal += 1;
                 }
+                if (checkstr.StartsWith("[xp] your xp to next level is:"))
+                {
+                    string xptoleveltmp = checkstr.Substring(30).Replace(",","");
+                    xpToLevel = double.Parse(xptoleveltmp);
+                    if (eatxp)
+                    {
+                        e.Eat = true;
+                    }
+                    eatxp = false;
+                }
                 if ((eatbank == true) && (checkstr.StartsWith("[bank]"))) {e.Eat = true;}
-                if (checkstr.StartsWith("[bank] weakly enlightened coins:")) 
+                if (checkstr.StartsWith("[bank] weakly enlightened coins:"))
                 {
                     eatbank = false; 
                     bankdata = false;
@@ -781,7 +828,6 @@ namespace MelksLuminanceTracker
                     command.StartsWith("/mlt"))
                 {
                     e.Eat = true;
-
                     ProcessCommand(tokens);
                 }
             }
@@ -879,7 +925,7 @@ namespace MelksLuminanceTracker
                     }
                     if (tokens[2].ToLower() == "xp")
                     {
-                        reportsOutput("XP");
+                        reportsOutput("XP");       
                     }       
                 }
             }
@@ -966,6 +1012,18 @@ namespace MelksLuminanceTracker
 
         [MVControlReference("xpRateLabel")]
         private IStaticText xpRateLabel = null;
+
+        [MVControlReference("xpTotalLabel")]
+        private IStaticText xpTotalLabel = null;
+
+        [MVControlReference("xpEarnedLabel")]
+        private IStaticText xpEarnedLabel = null;
+
+        [MVControlReference("xpToLvlLabel")]
+        private IStaticText xpToLvlLabel = null;
+
+        [MVControlReference("xpTimetoLvlLabel")]
+        private IStaticText xpTimetoLvlLabel = null;
 	}
 }
 
