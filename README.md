@@ -10,6 +10,7 @@ Console Commands: <br />
 /mlt report coin <br />
 /mlt report coine <br />
 /mlt report kills <br />
+/mlt report xp <br />
 /mlt silentpoll <br />
  <br />
 if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can
