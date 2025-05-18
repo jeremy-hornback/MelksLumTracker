@@ -778,6 +778,10 @@ namespace MelksLuminanceTracker
                     enbDebug = !enbDebug;
                     Util.WriteToChat($"Debugging {(enbDebug ? "Enabled" : "Disabled")}");
                 }
+                if (tokens[1].ToLower() == "silentpoll")
+                {
+                    bankPoll(true);
+                }
                 if (tokens[1].ToLower() == "report")
                 {
                     if (tokens.Length < 3 ){return;}
@@ -797,10 +801,7 @@ namespace MelksLuminanceTracker
                     {
                         reportsOutput("CoinE");
                     }
-                    if (tokens[2].ToLower() == "silentpoll")
-                    {
-                        bankPoll(true);
-                    }
+                    
                 }
                 if (tokens[1].ToLower() == "debug")
                 {
