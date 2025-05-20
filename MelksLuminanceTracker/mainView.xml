@@ -16,7 +16,7 @@
                 <control progid="DecalControls.PushButton" name="bankButton" left="5" top="180" width="30" height="20" text="/b"/>  
                 <control progid="DecalControls.PushButton" name="qbankButton" left="45" top="180" width="30" height="20" text="q/b"/>  
                 <control progid="DecalControls.PushButton" name="clapButton" left="105" top="180" width="90" height="20" text="/Clap All"/>
-                <control progid="DecalControls.StaticText" name="atcCurLbl" left="5" top="200" width="180" height="20" text="A: 0 T: 0 C: 0"/>
+                <control progid="DecalControls.StaticText" name="atcCurLbl" left="0" top="200" width="200" height="20" text="A: 0 T: 0 C: 0 CAvail: 0"/>
           	</control>
         </page>
         <page label="Spec">

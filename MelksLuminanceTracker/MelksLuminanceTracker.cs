@@ -59,6 +59,7 @@ namespace MelksLuminanceTracker
         private int curAetheria = 0;
         private int curTrinket = 0;
         private double curPyreals = 0;
+        private int coinclapavail = 0;
         private double curWEnlCoin = 0;
         private double curLegKey = 0;
         private double curMythKey = 0;
@@ -441,7 +442,7 @@ namespace MelksLuminanceTracker
                 lumRateCoinLabel.Text = $"Coins-Lum/hr: {tmplumRateCoin}";
 				effectiveCRateLabel.Text = $"Effective C/hr: {effectiveCRate}";
 				effectiveLRateLabel.Text = $"Effective L/hr: {tmpeffectiveLRate}";
-                atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount}";
+                atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount} CAvail: {coinclapavail}";
                 //Spec Tab
                 KillLabel.Text = $"Kills: {killsTotal}";
                 KillHrLabel.Text = $"Kills/hr: {killsperhr}";
@@ -528,7 +529,7 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                atcCurLbl.Text = "A: 0 T: 0 C: 0";
+                atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";
                 //XP Tab
                 xpTotalLabel.Text = "Total XP: 0";
                 xpEarnedLabel.Text = "Earned XP: 0";
@@ -570,6 +571,7 @@ namespace MelksLuminanceTracker
 				initialLuminance = -1;
                 xpInitVal = -1;
                 currentcoincount = 0;
+                coinclapavail = 0;
                 curAetheria = 0;
                 curTrinket = 0;
                 killLuminance = 0;
@@ -610,7 +612,7 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                atcCurLbl.Text = "A: 0 T: 0 C: 0";
+                atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";
                 //XP Tab
                 xpTotalLabel.Text = "Total XP: 0";
                 xpEarnedLabel.Text = "Earned XP: 0";
@@ -697,6 +699,9 @@ namespace MelksLuminanceTracker
                 coinRateOtherLum = hours > 0 ? Math.Round((luminOtherRate / hours / conversionCRate)) : 0;
                 effectivekillRate = coinRate + coinRateKillLum;
                 effectiveOtherRate = coinRate + coinRateOtherLum;
+                // Coins clappable
+                if (curPyreals < 250000) {coinclapavail = 0;}
+                else{ coinclapavail = (int)curPyreals / 250000;}
                 
                 if (effectiveOtherRate < 0){effectiveOtherRate=0;}
                 if (luminOtherRate < 0){luminOtherRate=0;}
