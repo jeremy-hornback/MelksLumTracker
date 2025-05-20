@@ -9,6 +9,8 @@ using VirindiViewService.Controls;
 */
 
 using System;
+using System.Xml;
+using System.IO;
 
 using Decal.Adapter;
 using Decal.Adapter.Wrappers;
@@ -56,7 +58,12 @@ namespace MelksLuminanceTracker
         private int currentcoincount;
         private int curAetheria = 0;
         private int curTrinket = 0;
-		private double currentLuminance;
+        private double curPyreals = 0;
+        private double curWEnlCoin = 0;
+        private double curLegKey = 0;
+        private double curMythKey = 0;
+		private double currentLuminance = 0;
+        private long current_luminance = 0;
         private double killLuminance = 0;
         private double otherLuminance = 0;
         private double effectiveCRate = 0;
@@ -98,6 +105,8 @@ namespace MelksLuminanceTracker
         private bool enbDebug = false;
 		private double conversionCRate = 66.2;
         private double conversionLRate = 66;
+        private string configPath;
+        private string characterKey;
         private string tmplumcurstr = "0";
         private string tmplumstr = "0";
         private string tmpothlumcurstr = "0";
@@ -120,7 +129,7 @@ namespace MelksLuminanceTracker
 				// The OOP way would be to pass Host and Core to your objects, but this is easier.
 				Globals.Init("MelksLuminanceTracker", Host, Core);
 				//Initialize the view.
-				MVWireupHelper.WireupStart(this, Host);
+				MVWireupHelper.WireupStart(this, Host);                
 			}
 			catch (Exception ex) {Util.WriteToChat($"Startup Error: {ex}");}
 		}
@@ -140,13 +149,11 @@ namespace MelksLuminanceTracker
 		{
 			try
 			{
-				//Util.WriteToChat("Plugin now online. Server population: " + Core.CharacterFilter.ServerPopulation);
-				//Util.WriteToChat("CharacterFilter_LoginComplete");
-				//InitSampleList();
 				// Subscribe to events here
-				//Globals.Core.WorldFilter.ChangeObject += new EventHandler<ChangeObjectEventArgs>(WorldFilter_ChangeObject2);
 				Util.WriteToChat("Melks Luminance Tracker Started");
-                Util.WriteToChat("to see possible commands type /mlt help");				
+                Util.WriteToChat("to see possible commands type /mlt help");
+                characterKey = $"{CoreManager.Current.CharacterFilter.Server}-{CoreManager.Current.CharacterFilter.Name}";
+                configPath = Util.FullPath("MLT_Settings.xml");
 				startTime = DateTime.Now;
 				pollTimer = new System.Timers.Timer();
                 updateTimer = new System.Timers.Timer();
@@ -154,16 +161,20 @@ namespace MelksLuminanceTracker
 				pollTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateUI);
                 updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(QuickUpdateUI);
                 clrTimer.Elapsed += new System.Timers.ElapsedEventHandler(eatClear);
+                MessageProcessed += new EventHandler<Decal.Adapter.MessageProcessedEventArgs>(Core_MessageProcessed);
                 pollTimer.Interval = 60000;
                 updateTimer.Interval = 5000;
                 clrTimer.Interval = 2000;
                 pollTimer.AutoReset = true;
-                pollTimer.Enabled = true;                
+                pollTimer.Enabled = true;
                 pollTimer.Start();
-                updateTimer.Start();
-                updateconversion();
+                updateTimer.Start();                
                 initControls();
+                LoadSettings();
+                updateconversion();
                 isinitialized = true;
+                if (pollRate > 1) {updatePolling();}
+                if (!progenable) {Util.WriteToChat("Program is currently Disabled");}
                 bankPoll(true);
 			}
 			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_LoginComplete Error: {ex}");}
@@ -177,6 +188,7 @@ namespace MelksLuminanceTracker
 				// Unsubscribe to events here, but know that this event is not gauranteed to happen. I've never seen it not fire though.
 				// This is not the proper place to free up resources, but... its the easy way. It's not proper because of above statement.
 				//Globals.Core.WorldFilter.ChangeObject -= new EventHandler<ChangeObjectEventArgs>(WorldFilter_ChangeObject2);
+                MessageProcessed -= new EventHandler<Decal.Adapter.MessageProcessedEventArgs>(Core_MessageProcessed);
                 pollTimer?.Stop();
                 clrTimer?.Stop();
                 updateTimer?.Stop();
@@ -188,6 +200,180 @@ namespace MelksLuminanceTracker
                 updateTimer = null;                
 			}
 			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_Logoff Error: {ex}");}
+		}
+
+        private void LoadSettings()
+        {
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(configPath);
+                XmlNode charNode = doc.SelectSingleNode($"/MLT_Settings/Character[@key='{characterKey}']");
+                Util.WriteToChat($"Loading Settings: {characterKey}");
+                if (charNode == null) {Util.WriteToChat("Loading Settings: No Char Node Found");return;}
+
+                // Load auto-reset
+                XmlNode node = charNode.SelectSingleNode("AutoResetEnabled");
+                if (node != null) 
+                {
+                    autoResetEnabled = bool.Parse(node.InnerText);
+                    autoResetBtn.Text = $"Auto-Reset Txfr: {(autoResetEnabled ? "On" : "Off")}";
+                }
+
+                // Load Coin by Bank
+                XmlNode node5 = charNode.SelectSingleNode("coinusebank");
+                if (node != null) 
+                {
+                    coinusebank = bool.Parse(node5.InnerText);
+                    coinBankBtn.Text = $"Coin by Bank: {(coinusebank ? "On" : "Off")}";
+                }
+
+                // Load Program Enable
+                XmlNode node6 = charNode.SelectSingleNode("progenable");
+                if (node != null) 
+                {
+                    progenable = bool.Parse(node6.InnerText);
+                    calcEnableBtn.Text = $"{(progenable ? "Enabled" : "Disabled")}";
+                }
+
+                // Load conversion rate
+                XmlNode node2 = charNode.SelectSingleNode("ConversionRate");
+                if (node2 != null && double.TryParse(node2.InnerText, out double rate))
+                {
+                    conversionCRate = rate;
+                    convRateInput.Text = conversionCRate.ToString();
+                }
+                XmlNode node3 = charNode.SelectSingleNode("ConversionLRate");
+                if (node3 != null && double.TryParse(node3.InnerText, out double rate2))
+                {
+                    conversionCRate = rate2;
+                    convRateLInput.Text = rate2.ToString();
+                }
+
+                // Load Poll Rate
+                XmlNode node4 = charNode.SelectSingleNode("pollRate");
+                if (node4 != null && int.TryParse(node4.InnerText, out int rate3))
+                {
+                    pollRate = rate3;
+                    pollRateInput.Text = rate3.ToString();
+                }
+            }
+            catch (Exception ex) {Util.WriteToChat($"LoadSettings Settings Error: {ex}");}
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                XmlElement root = null;                
+                if (File.Exists(configPath))
+                {
+                    doc.Load(configPath);
+                    root = doc.DocumentElement;
+                }
+                else
+                {
+                    root = doc.CreateElement("MLT_Settings");
+                    doc.AppendChild(root);
+                }
+
+                // Find or create character node
+                XmlNode charNode = root.SelectSingleNode($"Character[@key='{characterKey}']");
+                if (charNode == null)
+                {
+                    charNode = doc.CreateElement("Character");
+                    ((XmlElement)charNode).SetAttribute("key", characterKey);
+                    root.AppendChild(charNode);
+                }
+
+                // Auto-reset
+                XmlElement autoResetElem = doc.CreateElement("AutoResetEnabled");
+                autoResetElem.InnerText = autoResetEnabled.ToString();
+                ReplaceOrAppend(charNode, autoResetElem);
+
+                // Coin by Bankprogenable
+                XmlElement coinusebankElem = doc.CreateElement("coinusebank");
+                coinusebankElem.InnerText = coinusebank.ToString();
+                ReplaceOrAppend(charNode, coinusebankElem);
+
+                // Program Enable 
+                XmlElement progenableElem = doc.CreateElement("progenable");
+                progenableElem.InnerText = progenable.ToString();
+                ReplaceOrAppend(charNode, progenableElem);
+
+                // Conversion rate
+                XmlElement conversionElem = doc.CreateElement("ConversionRate");
+                double tmpconv = conversionCRate / 1000000;
+                conversionElem.InnerText = tmpconv.ToString();
+                ReplaceOrAppend(charNode, conversionElem);
+    
+                // Luminance Conversion rate
+                XmlElement conversionLElem = doc.CreateElement("ConversionLRate");
+                double tmpconvl = conversionLRate / 1000000;
+                conversionLElem.InnerText = tmpconvl.ToString();
+                ReplaceOrAppend(charNode, conversionLElem);
+                
+                // Poll rate
+                XmlElement pollRateElem = doc.CreateElement("pollRate");
+                pollRateElem.InnerText = pollRate.ToString();
+                ReplaceOrAppend(charNode, pollRateElem);
+    
+                doc.Save(configPath);
+            }
+            catch (Exception ex) {Util.WriteToChat($"SaveSettings Error: {ex}");}
+        }
+
+        private void ReplaceOrAppend(XmlNode parent, XmlElement newElement)
+        {
+            XmlNode old = parent.SelectSingleNode(newElement.Name);
+            if (old != null)
+                parent.ReplaceChild(newElement, old);
+            else
+                parent.AppendChild(newElement);
+        }
+
+        void Core_MessageProcessed(object sender, Decal.Adapter.MessageProcessedEventArgs e)
+		{
+			//Need this to track luminance
+			switch (e.Message.Type)
+			{
+				case 0x02CF: //Set character qword
+					{
+						int key = e.Message.Value<int>("key");
+						if (key == 0x06)
+						{
+							current_luminance = e.Message.Value<long>("value");
+                            Util.WriteToChat($"Current_Luminance Update: {current_luminance}");
+						}
+					}
+					break;
+				case 0xF7B0: //Ordered message
+					switch (e.Message.Value<int>("event"))
+					{
+						case 0x0013: //Login character
+							{
+								Decal.Adapter.MessageStruct properties = e.Message.Struct("properties");
+								if ((properties.Value<int>("flags") & 0x00000080) > 0)
+								{
+									short qwordcount = properties.Value<short>("qwordCount");
+									for (short i = 0; i < qwordcount; ++i)
+									{
+										int key = properties.Struct("qwords").Struct(i).Value<int>("key");
+										if (key == 0x06)
+										{
+											current_luminance = properties.Struct("qwords").Struct(i).Value<long>("value");
+                                            Util.WriteToChat($"Current_Luminance Update: {current_luminance}");
+											break;
+										}
+									}
+								}
+							}
+							break;
+					}
+					break;
+			}
+            
 		}
 
         private void UpdateUI(Object source, System.Timers.ElapsedEventArgs e)
@@ -298,11 +484,17 @@ namespace MelksLuminanceTracker
                     tmpval = Math.Round(tmpval, 3); 
                     tmpvalstr = $"{tmpval} Tril";
                 }
-                else if (tmpval >= 1000000000000000)
+                else if ((tmpval >= 1000000000000000) && (tmpval < 1000000000000000000))
                 {
-                    tmpval = tmpval / 1000000000000000;
+                    tmpval = tmpval / 1000000000000;
                     tmpval = Math.Round(tmpval, 3); 
                     tmpvalstr = $"{tmpval} Quad";
+                }
+                else if (tmpval >= 1000000000000000000)
+                {
+                    tmpval = tmpval / 1000000000000000000;
+                    tmpval = Math.Round(tmpval, 3); 
+                    tmpvalstr = $"{tmpval} Quint";
                 }                
                 return tmpvalstr;
 			}
@@ -390,6 +582,10 @@ namespace MelksLuminanceTracker
                 xpCur = 0;
                 xpRate = 0;
                 xpDiff = 0;
+                curPyreals = 0;
+                curWEnlCoin = 0;
+                curLegKey = 0;
+                curMythKey = 0;
                 
 				startTime = DateTime.Now;
                 //Main Tab
@@ -441,6 +637,7 @@ namespace MelksLuminanceTracker
                     }
                 }
                 killsperhr = hours > 0 ? Math.Round(killsTotal / hours) : 0;
+                //XP Calculations
                 if (xpInitVal == -1)
                 {
                     xpInitVal = CoreManager.Current.CharacterFilter.TotalXP; //CoreManager.Current.CharacterFilter.UnassignedXP 
@@ -463,6 +660,7 @@ namespace MelksLuminanceTracker
                         tmphrs = 0;
                         tmpmin = xplvlrate * 60;
                     }
+                    if (tmphrs > 999) {tmphrs = 999;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
@@ -474,6 +672,7 @@ namespace MelksLuminanceTracker
                 // Luminance per hour
                 lumdiff = currentLuminance - initialLuminance;    
                 luminRate = hours > 0 ? Math.Round(lumdiff / hours, 1) : 0;
+                // Coins per hour
                 if (coinusebank){
                     coindiff = currentCoins - initialCoins;}
                 else {
@@ -484,7 +683,7 @@ namespace MelksLuminanceTracker
                 coinRateLum = hours > 0 ? Math.Round((luminRate / conversionLRate)) : 0;
                 lumRateCoin =  hours > 0 ? Math.Round((coinRate * conversionCRate), 1) : 0;
                 effectiveLRate = luminRate + lumRateCoin;
-                // Other Luminance
+                // Other-kill Luminance
                 otherLuminance = lumdiff - killLuminance;
                 if (otherLuminance < 0){otherLuminance=0;}
                 
@@ -495,13 +694,13 @@ namespace MelksLuminanceTracker
                 coinRateOtherLum = hours > 0 ? Math.Round((luminOtherRate / hours / conversionCRate)) : 0;
                 effectivekillRate = coinRate + coinRateKillLum;
                 effectiveOtherRate = coinRate + coinRateOtherLum;
-
+                
                 if (effectiveOtherRate < 0){effectiveOtherRate=0;}
                 if (luminOtherRate < 0){luminOtherRate=0;}
                 if (luminkillRate < 0){luminkillRate=0;}
                 if (coinRateKillLum < 0){coinRateKillLum=0;}
                 if (coinRateOtherLum < 0){coinRateOtherLum=0;}
-
+                //String conversion for large values
                 tmplumcurstr = StrValUpdate(currentLuminance);
                 tmplumstr = StrValUpdate(luminRate);
                 tmpothlumcurstr = StrValUpdate(otherLuminance);
@@ -538,6 +737,7 @@ namespace MelksLuminanceTracker
         	    autoResetEnabled = !autoResetEnabled;
                 Util.WriteToChat($"autoResetEnabled = {autoResetEnabled}");
 		        autoResetBtn.Text = $"Auto-Reset Txfr: {(autoResetEnabled ? "On" : "Off")}";
+                SaveSettings();
 			}
 			catch (Exception ex) {Util.WriteToChat($"autoResetBtn_Click Error: {ex}");}
         }
@@ -584,17 +784,26 @@ namespace MelksLuminanceTracker
 			try
 			{
                 if (!isinitialized) {return;}
+                updatePolling();
+                SaveSettings();
+            }
+			catch (Exception ex) {Util.WriteToChat($"UpdatePoll Error: {ex}");}
+		}
+
+        private void updatePolling()
+        {
+            try
+            {
                 if (pollRateInput.Text == null) {pollRate = 1;}
                 else{
                     int.TryParse(pollRateInput.Text, out pollRate);
                 }
                 if (pollRate < 1){pollRate = 1;}
-                pollTimer?.Stop();
                 pollTimer.Interval = pollRate * 60000;
-                pollTimer.Start();
                 Util.WriteToChat("Updated Poll Rate Minutes: " + pollRate);
+                
             }
-			catch (Exception ex) {Util.WriteToChat($"UpdatePoll Error: {ex}");}
+			catch (Exception ex) {Util.WriteToChat($"updatePolling Error: {ex}");}
 		}
 
         [MVControlEvent("coinBankBtn", "Click")]
@@ -606,6 +815,7 @@ namespace MelksLuminanceTracker
 				coinusebank = !coinusebank;
                 Util.WriteToChat($"Coin By Bank set to: {coinusebank}");
                 coinBankBtn.Text = $"Coin by Bank: {(coinusebank ? "On" : "Off")}";
+                SaveSettings();
 			}
 			catch (Exception ex) {Util.WriteToChat($"coinBankBtn_Click Error: {ex}");}
 		}
@@ -618,6 +828,7 @@ namespace MelksLuminanceTracker
                 if (!isinitialized) {return;}
                 Util.WriteToChat("Updating Conversion Factor");
                 updateconversion();
+                SaveSettings();
             }
 			catch (Exception ex) {Util.WriteToChat($"applyConversionButton Error: {ex}");}
 		}
@@ -632,6 +843,7 @@ namespace MelksLuminanceTracker
                 Util.WriteToChat($"Program Enable: {progenable}");
                 calcEnableBtn.Text = $"{(progenable ? "Enabled" : "Disabled")}";
                 totalReset();
+                SaveSettings();
 			}
 			catch (Exception ex) {Util.WriteToChat($"calcEnableBtn_Click Error: {ex}");}
 		}
@@ -743,6 +955,11 @@ namespace MelksLuminanceTracker
                 //Util.WriteToChat($"Message: {e.Text.ToLower()}");
                 string checkstr = e.Text.ToLower();
                 if (checkstr.StartsWith("[[bank] your balances are:")){bankdata = true; }
+                if (checkstr.StartsWith("[bank] pyreals: "))
+                {
+                    string tmppy = checkstr.Substring(16).Replace(",","");
+                    curPyreals = double.Parse(tmppy);
+                }
                 if (checkstr.StartsWith("[bank] luminance: "))
                 {
                     string lumtmp = checkstr.Substring(18).Replace(",","");
@@ -751,6 +968,16 @@ namespace MelksLuminanceTracker
                     {
                         initialLuminance = currentLuminance;
                     }
+                }
+                if (checkstr.StartsWith("[bank] legendary keys: "))
+                {
+                    string tmplk = checkstr.Substring(23).Replace(",","");
+                    curLegKey = double.Parse(tmplk);
+                }
+                if (checkstr.StartsWith("[bank] Mythical Keys: "))
+                {
+                    string tmpmk = checkstr.Substring(22).Replace(",","");
+                    curMythKey = double.Parse(tmpmk);
                 }
                 if (checkstr.StartsWith("[bank] enlightened coins: "))
                 {
@@ -767,6 +994,18 @@ namespace MelksLuminanceTracker
                     killLuminance += double.Parse(Regex.Match(checkstr, @"\d+").Value);
                     killsTotal += 1;
                 }
+                if ((eatbank == true) && (checkstr.StartsWith("[bank]"))) {e.Eat = true;}
+                if (checkstr.StartsWith("[bank] weakly enlightened coins:"))
+                {
+                    string tmpwec = checkstr.Substring(33).Replace(",","");
+                    curWEnlCoin = double.Parse(tmpwec);
+                    eatbank = false; 
+                    bankdata = false;
+                    clrTimer.Stop();
+                    if (!progenable){ return;}
+                    doCalcs();
+                    updateGUI();
+                }
                 if (checkstr.StartsWith("[xp] your xp to next level is:"))
                 {
                     string xptoleveltmp = checkstr.Substring(30).Replace(",","");
@@ -776,16 +1015,6 @@ namespace MelksLuminanceTracker
                         e.Eat = true;
                     }
                     eatxp = false;
-                }
-                if ((eatbank == true) && (checkstr.StartsWith("[bank]"))) {e.Eat = true;}
-                if (checkstr.StartsWith("[bank] weakly enlightened coins:"))
-                {
-                    eatbank = false; 
-                    bankdata = false;
-                    clrTimer.Stop();
-                    if (!progenable){ return;}
-                    doCalcs();
-                    updateGUI();
                 }
                 if (autoResetEnabled){
                     bool isAugUsage= false;
@@ -1036,11 +1265,12 @@ namespace MelksLuminanceTracker
 
 /*
 
+
 [BANK] Your balances are:
-[BANK] Pyreals: 834,533,210
-[BANK] Luminance: 25,636,958,920
-[BANK] Legendary Keys: 46
-[BANK] Mythical Keys: 751
-[BANK] Enlightened Coins: 586
-[BANK] Weakly Enlightened Coins: 6
+[BANK] Pyreals: 811,645,692
+[BANK] Luminance: 25,653,561,269
+[BANK] Legendary Keys: 178
+[BANK] Mythical Keys: 605
+[BANK] Enlightened Coins: 113
+[BANK] Weakly Enlightened Coins: 3
 */

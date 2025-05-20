@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Xml;
 
 namespace MelksLuminanceTracker
 {
 	public static class Util
 	{
+        private static string mBasePath = null;
+
 		public static void LogError(Exception ex)
 		{
 			try
@@ -39,5 +42,44 @@ namespace MelksLuminanceTracker
 			}
 			catch (Exception ex) { LogError(ex); }
 		}
+        
+        public static string FullPath(string fileName)
+		{
+			return System.IO.Path.Combine(BasePath, fileName);
+		}
+
+        public static void SaveXml(XmlDocument doc, string filePath)
+		{
+			XmlWriterSettings writerSettings = new XmlWriterSettings();
+			writerSettings.Indent = true;
+			writerSettings.IndentChars = "    ";
+			using (XmlWriter writer = XmlWriter.Create(filePath, writerSettings))
+			{
+				doc.Save(writer);
+			}
+		}
+
+        public static string BasePath
+		{
+			get
+			{
+				if (mBasePath == null)
+				{
+					mBasePath = System.Reflection.Assembly.GetExecutingAssembly().Location.ToString();
+					int slash = mBasePath.LastIndexOf('\\');
+					if (slash > 0)
+						mBasePath = mBasePath.Substring(0, slash + 1);
+				}
+				return mBasePath;
+			}
+			set
+			{
+				if (value.EndsWith("\\"))
+					mBasePath = value;
+				else
+					mBasePath = value + "\\";
+			}
+		}
 	}
+    
 }
