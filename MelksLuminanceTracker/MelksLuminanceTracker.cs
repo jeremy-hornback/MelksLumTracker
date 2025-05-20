@@ -91,6 +91,7 @@ namespace MelksLuminanceTracker
         private double xpToLevel = 0;
         private TimeSpan elapsed;
         private TimeSpan timetolvl;
+        private TimeSpan timeclap;
 		private DateTime startTime;
         private int pollRate = 1;
 		private System.Timers.Timer pollTimer;
@@ -701,8 +702,27 @@ namespace MelksLuminanceTracker
                 effectiveOtherRate = coinRate + coinRateOtherLum;
                 // Coins clappable
                 if (curPyreals < 250000) {coinclapavail = 0;}
-                else{ coinclapavail = (int)curPyreals / 250000;}
-                
+                else{ 
+                    coinclapavail = (int)curPyreals / 250000;
+                    if (coinRate >= 1){                        
+                        double clapRate = curPyreals / (coinRate * 250000);
+                        double tmpclaphrs;
+                        double tmpclapmin;
+                        if (clapRate >= 1) {
+                            tmpclaphrs = clapRate % 1;
+                            tmpclapmin = (clapRate - (clapRate % 1)) * 60;
+                        } else {
+                            tmpclaphrs = 0;
+                            tmpclapmin = clapRate * 60;
+                        }                    
+                        if (tmpclaphrs > 999) {tmpclaphrs = 999;}
+                            TimeSpan tmpclaptimehr;
+                            TimeSpan tmpclaptimemin;
+                            tmpclaptimehr = TimeSpan.FromHours(tmpclaphrs);
+                            tmpclaptimemin = TimeSpan.FromMinutes(tmpclapmin);
+                            timeclap = tmpclaptimehr + tmpclaptimemin;
+                    }
+                }
                 if (effectiveOtherRate < 0){effectiveOtherRate=0;}
                 if (luminOtherRate < 0){luminOtherRate=0;}
                 if (luminkillRate < 0){luminkillRate=0;}
@@ -937,11 +957,13 @@ namespace MelksLuminanceTracker
             if (rpt == "Coin") 
             {
                 Util.WriteToChat($"You gained {coindiff:n} Coins in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {coinRate} Coins per hour.");
+                Util.WriteToChat($"You have {curPyreals:n} Pyreals and can continue Clapping for {timeclap.Days:D2} Days {timeclap.Hours:D2} Hours {timeclap.Minutes:D2} Minutes");
             }
             if (rpt == "CoinE") 
             {
                 Util.WriteToChat($"You gained {coindiff:n} Coins in {elapsed.Hours:D2}:{elapsed.Minutes:D2} for {coinRate} Coins per hour.");
                 Util.WriteToChat($"You are earning {coinRateLum} Coins from Luminancer per hour @ {conversionCRate} per coin");
+                Util.WriteToChat($"You have {curPyreals:n} Pyreals and can continue Clapping for {timeclap.Days:D2} Days {timeclap.Hours:D2} Hours {timeclap.Minutes:D2} Minutes");
                 Util.WriteToChat($"Your effective Coins per hour is : {effectiveCRate:n}");
             }
             if (rpt == "Kill") 
