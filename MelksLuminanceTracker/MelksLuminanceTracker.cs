@@ -436,7 +436,7 @@ namespace MelksLuminanceTracker
                 //Main Tab
                 luminCurrentLabel.Text = $"[Bank] Luminance: {tmplumcurstr}";
                 coinCurrentLabel.Text = $"[Bank] Coins: {currentCoins}";
-                timeLabel.Text = $"Time: {elapsed.Hours:D2}:{elapsed.Minutes:D2}";
+                timeLabel.Text = $"Run Time: {elapsed.TotalHours:n0}:{elapsed.Minutes:D2}";
 				luminRateLabel.Text = $"Lum/hr: {tmplumstr}";
 				coinRateLabel.Text = $"Coins/hr: {coinRate}";
                 coinRateLumLabel.Text = $"Lum-Coins/hr: {coinRateLum}";
@@ -518,7 +518,7 @@ namespace MelksLuminanceTracker
                 lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
 				effectiveCRateLabel.Text = "Effective C/hr: 0";
 				effectiveLRateLabel.Text = "Effective L/hr: 0";
-				timeLabel.Text = "Time: 00:00";          
+				timeLabel.Text = "Run Time: 00:00";          
                 //Spec Tab
                 KillLabel.Text = "Kills: 0";
                 KillHrLabel.Text = "Kills/hr: 0";
@@ -601,7 +601,7 @@ namespace MelksLuminanceTracker
                 lumRateCoinLabel.Text = "Coins-Lum/hr: 0";
 				effectiveCRateLabel.Text = "Effective C/hr: 0";
 				effectiveLRateLabel.Text = "Effective L/hr: 0";
-				timeLabel.Text = "Time: 00:00";          
+				timeLabel.Text = "Run Time: 00:00";          
                 //Spec Tab
                 KillLabel.Text = "Kills: 0";
                 KillHrLabel.Text = "Kills/hr: 0";

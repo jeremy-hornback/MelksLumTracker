@@ -12,7 +12,7 @@
                 <control progid="DecalControls.StaticText" name="lumRateCoinLabel" left="5" top="100" width="180" height="20" text="Coins-Lum/hr: 0"/>
 	            <control progid="DecalControls.StaticText" name="effectiveCRateLabel" left="5" top="120" width="190" height="20" text="Effective C/hr: 0"/>
                 <control progid="DecalControls.StaticText" name="effectiveLRateLabel" left="5" top="140" width="190" height="20" text="Effective L/hr: 0"/>
-	            <control progid="DecalControls.StaticText" name="timeLabel" left="5" top="160" width="150" height="20" text="Time: 00:00"/>
+	            <control progid="DecalControls.StaticText" name="timeLabel" left="5" top="160" width="150" height="20" text="Run Time: 00:00"/>
                 <control progid="DecalControls.PushButton" name="bankButton" left="5" top="180" width="30" height="20" text="/b"/>  
                 <control progid="DecalControls.PushButton" name="qbankButton" left="45" top="180" width="30" height="20" text="q/b"/>  
                 <control progid="DecalControls.PushButton" name="clapButton" left="105" top="180" width="90" height="20" text="/Clap All"/>
