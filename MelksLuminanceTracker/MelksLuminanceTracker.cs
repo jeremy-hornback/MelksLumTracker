@@ -55,16 +55,11 @@ namespace MelksLuminanceTracker
 		private double initialCoins = -1;
 		private double initialLuminance = -1;
 		private double currentCoins;
-        private int currentcoincount;
-        private int curAetheria = 0;
-        private int curTrinket = 0;
         private double curPyreals = 0;
-        private int coinclapavail = 0;
         private double curWEnlCoin = 0;
         private double curLegKey = 0;
         private double curMythKey = 0;
 		private double currentLuminance = 0;
-        private long current_luminance = 0;
         private double killLuminance = 0;
         private double otherLuminance = 0;
         private double effectiveCRate = 0;
@@ -89,11 +84,18 @@ namespace MelksLuminanceTracker
         private double xpInitVal = -1;
         private double xpDiff = 0;
         private double xpToLevel = 0;
+		private double conversionCRate = 66.2;
+        private double conversionLRate = 66;
+        private long current_luminance = 0;
+        private int currentcoincount;
+        private int curAetheria = 0;
+        private int curTrinket = 0;
+        private int coinclapavail = 0;
+        private int pollRate = 1;
         private TimeSpan elapsed;
         private TimeSpan timetolvl;
         private TimeSpan timeclap;
 		private DateTime startTime;
-        private int pollRate = 1;
 		private System.Timers.Timer pollTimer;
         private System.Timers.Timer updateTimer;
         private System.Timers.Timer clrTimer;
@@ -106,8 +108,7 @@ namespace MelksLuminanceTracker
         private bool isinitialized = false;
         private bool enbDebug = false;
         private bool savefilefnd = false;
-		private double conversionCRate = 66.2;
-        private double conversionLRate = 66;
+        private string txToName = "";
         private string configPath;
         private string characterKey;
         private string tmplumcurstr = "0";
@@ -262,6 +263,14 @@ namespace MelksLuminanceTracker
                     pollRate = rate3;
                     pollRateInput.Text = rate3.ToString();
                 }
+
+                // Load Poll Rate
+                XmlNode node7 = charNode.SelectSingleNode("txToName");
+                if (node7 != null)
+                {
+                    txToInput.Text = node7.InnerText;
+                    txToName = node7.InnerText;
+                }
             }
             catch (Exception ex) {Util.WriteToChat($"LoadSettings Settings Error: {ex}");}
         }
@@ -323,6 +332,11 @@ namespace MelksLuminanceTracker
                 XmlElement pollRateElem = doc.CreateElement("pollRate");
                 pollRateElem.InnerText = pollRate.ToString();
                 ReplaceOrAppend(charNode, pollRateElem);
+    
+                // Transfer Name
+                XmlElement txToNameElem = doc.CreateElement("txToName");
+                txToNameElem.InnerText = txToInput.Text;
+                ReplaceOrAppend(charNode, txToNameElem);
     
                 doc.Save(configPath);
             }
@@ -400,8 +414,8 @@ namespace MelksLuminanceTracker
             eatbank = eb;            
             clrTimer.Start();
             eatxp = true;
-            CoreManager.Current.Actions.InvokeChatParser("/xp");  
-            CoreManager.Current.Actions.InvokeChatParser("/b");
+            Util.Command("/xp");  
+            Util.Command("/b");
         }
 
         private void eatClear(object sender, EventArgs e)
@@ -801,7 +815,7 @@ namespace MelksLuminanceTracker
 			try
 			{
                 if (!isinitialized) {return;}
-                CoreManager.Current.Actions.InvokeChatParser("/clap all");
+                Util.Command("/clap all");
             }
 			catch (Exception ex) {Util.WriteToChat($"clapButton_Click Error: {ex}");}
 		}
@@ -941,6 +955,60 @@ namespace MelksLuminanceTracker
 			}
 			catch (Exception ex) {Util.WriteToChat($"reportKillBtn_Click Error: {ex}");}
 		}
+
+        [MVControlEvent("txCoinsBtn", "Click")]
+		void txCoinsBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                txStuff("Coins");
+                SaveSettings();
+			}
+			catch (Exception ex) {Util.WriteToChat($"txCoinsBtn_Click Error: {ex}");}
+		}
+    
+        [MVControlEvent("txLumBtn", "Click")]
+		void txLumBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                txStuff("Lum");
+                SaveSettings();
+			}
+			catch (Exception ex) {Util.WriteToChat($"txLumBtn_Click Error: {ex}");}
+		}
+
+        private void txStuff(string totx)
+        {
+            try
+			{
+                if (txToInput.Text == ""){Util.WriteToChat("No Name Selected for Transfer"); return;}
+                txToName = txToInput.Text;
+                if (totx == "Coins")
+                {
+                    int tcointx = (int)currentCoins - 1;
+                    if (enbDebug){Util.WriteToChat($"/b t e {tcointx} \"{txToName}\"");}
+                    if (tcointx == 0) {Util.WriteToChat("Not Enough Coins to Transfer"); return;}
+                    Util.WriteToChat($"Transfering {tcointx} Coins to: {txToName}");
+                    string tccmnd = $"/b t e {tcointx} \"{txToName}\"";
+                    //CoreManager.Current.Actions.InvokeChatParser("/b t e " + tcointx + " \"{txToName}\"";
+                    Util.Command(tccmnd);
+                }
+                else if (totx == "Lum")
+                {
+                    int tlumtx = (int)currentLuminance - 1;
+                    if (enbDebug){Util.WriteToChat($"/b t l {tlumtx} \"{txToName}\"");}
+                    if (tlumtx == 0) {Util.WriteToChat("Not Enough Luminance to Transfer"); return;}
+                    Util.WriteToChat($"Transfering {tlumtx} Luminance to: {txToName}");
+                    string tlcmnd = $"/b t l {tlumtx} \"{txToName}\"";
+                    //CoreManager.Current.Actions.InvokeChatParser(
+                    Util.Command(tlcmnd);
+                }
+            }
+			catch (Exception ex) {Util.WriteToChat($"txStuff Error: {ex}");}
+        }
 
         private void reportsOutput(string rpt)  // Skippy's : You've gained 5,245,917 luminance in 15 seconds for 1,251,167,121 luminance per hour.
         {
@@ -1174,6 +1242,8 @@ namespace MelksLuminanceTracker
                     Util.WriteToChat("/mlt report coin");
                     Util.WriteToChat("/mlt report coine");
                     Util.WriteToChat("/mlt report kills");
+                    Util.WriteToChat("/mlt txcoins");
+                    Util.WriteToChat("/mlt txlum");
                     Util.WriteToChat("/mlt silentpoll");
                     Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
                     Util.WriteToChat("The Coin-Lum Conversion value is the amount of luminance you get for 1 coin.");
@@ -1223,6 +1293,16 @@ namespace MelksLuminanceTracker
                 {
                     if (enbDebug){Util.WriteToChat($"silentpoll Activated");}
                     bankPoll(true);
+                }
+                if (tokens[1].ToLower() == "txcoins")
+                {
+                    txStuff("Coins");
+                    SaveSettings();
+                }
+                if (tokens[1].ToLower() == "txlum")
+                {
+                    txStuff("Lum");
+                    SaveSettings();
                 }
                 if (tokens[1].ToLower() == "report")
                 {
@@ -1284,6 +1364,9 @@ namespace MelksLuminanceTracker
 
         [MVControlReference("pollRateInput")]
 		private ITextBox pollRateInput = null;
+    
+        [MVControlReference("txToInput")]
+		private ITextBox txToInput = null;
 
         [MVControlReference("coinRateLumLabel")]
         private IStaticText coinRateLumLabel = null;

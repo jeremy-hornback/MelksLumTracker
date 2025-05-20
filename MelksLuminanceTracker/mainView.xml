@@ -19,7 +19,7 @@
                 <control progid="DecalControls.StaticText" name="atcCurLbl" left="0" top="200" width="200" height="20" text="A: 0 T: 0 C: 0 CAvail: 0"/>
           	</control>
         </page>
-        <page label="Spec">
+        <page label="Data">
             <control progid="DecalControls.FixedLayout" clipped="">
                 <control progid="DecalControls.StaticText" name="KillLabel" left="5" top="5" width="180" height="20" text="Kills: 0"/>
                 <control progid="DecalControls.StaticText" name="KillHrLabel" left="5" top="25" width="180" height="20" text="Kill/hr: 0"/>
@@ -42,7 +42,7 @@
                 <control progid="DecalControls.StaticText" name="xpTimetoLvlLabel" left="5" top="105" width="180" height="20" text="Time to Lvl: 00:00"/>
             </control>
         </page>
-        <page label="Report">
+        <page label="Rpt-Tx">
             <control progid="DecalControls.FixedLayout" clipped="">
                 <control progid="DecalControls.StaticText" name="reportlbl" left="85" top="5" width="50" height="20" text="REPORTS"/>
                 <control progid="DecalControls.PushButton" name="reportLumBtn" left="5" top="25" width="40" height="20" text="Lum"/>
@@ -51,9 +51,14 @@
                 <control progid="DecalControls.PushButton" name="reportCoinEBtn" left="55" top="50" width="40" height="20" text="Coin E"/>
                 <control progid="DecalControls.PushButton" name="reportKillBtn" left="5" top="75" width="40" height="20" text="Kills"/>
                 <control progid="DecalControls.PushButton" name="reportXPBtn" left="55" top="75" width="40" height="20" text="XP"/>
+                <control progid="DecalControls.StaticText" name="txfrtlbl" left="80" top="100" width="70" height="20" text="TRANSFERS"/>
+                <control progid="DecalControls.StaticText" name="txfrt2lbl" left="5" top="125" width="50" height="20" text="Tx TO:"/>
+                <control progid="DecalControls.Edit" name="txToInput" left="65" top="125" width="125" height="20" text=""/>
+                <control progid="DecalControls.PushButton" name="txCoinsBtn" left="25" top="150" width="60" height="20" text="Tx Coins"/>
+                <control progid="DecalControls.PushButton" name="txLumBtn" left="95" top="150" width="60" height="20" text="Tx Lum"/>
             </control>
         </page>
-        <page label="Config">
+        <page label="Cfg">
             <control progid="DecalControls.FixedLayout" clipped="">
                 <control progid="DecalControls.StaticText" name="ConversionLbl" left="0" top="5" width="200" height="20" text="Lum-Coin  Coin-Lum in mil lum"/>
                 <control progid="DecalControls.Edit" name="convRateInput" left="0" top="25" width="50" height="20" text="66.2"/>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿﻿using Decal.Adapter;
+using System;
 using System.IO;
 using System.Xml;
 
@@ -80,6 +81,16 @@ namespace MelksLuminanceTracker
 					mBasePath = value + "\\";
 			}
 		}
+
+        internal static void Command(string command)
+		{
+			try
+			{
+				CoreManager.Current.Actions.InvokeChatParser(command);
+			}
+			catch (Exception ex) { WriteToChat($"Util Command Error: {ex}"); }
+		}
+
 	}
     
 }

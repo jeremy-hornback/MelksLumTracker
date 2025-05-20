@@ -14,5 +14,6 @@
     <ConversionRate>66.2</ConversionRate>
     <ConversionLRate>66</ConversionLRate>
     <pollRate>5</pollRate>
+    <txToName>Melka Summoner</txToName>
   </Character>
 </MLT_Settings>
