@@ -12,6 +12,8 @@ Console Commands: <br />
 /mlt report kills <br />
 /mlt report xp <br />
 /mlt silentpoll <br />
+/mlt txcoins <br />
+/mlt txlum <br />
  <br />
 if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can
 <br />
