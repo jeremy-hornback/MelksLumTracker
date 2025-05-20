@@ -103,6 +103,7 @@ namespace MelksLuminanceTracker
         private bool bankdata = false;
         private bool isinitialized = false;
         private bool enbDebug = false;
+        private bool savefilefnd = false;
 		private double conversionCRate = 66.2;
         private double conversionLRate = 66;
         private string configPath;
@@ -176,6 +177,7 @@ namespace MelksLuminanceTracker
                 if (pollRate > 1) {updatePolling();}
                 if (!progenable) {Util.WriteToChat("Program is currently Disabled");}
                 bankPoll(true);
+                if (!savefilefnd) {SaveSettings();}
 			}
 			catch (Exception ex) {Util.WriteToChat($"CharacterFilter_LoginComplete Error: {ex}");}
 		}
@@ -211,6 +213,7 @@ namespace MelksLuminanceTracker
                 XmlNode charNode = doc.SelectSingleNode($"/MLT_Settings/Character[@key='{characterKey}']");
                 Util.WriteToChat($"Loading Settings: {characterKey}");
                 if (charNode == null) {Util.WriteToChat("Loading Settings: No Char Node Found");return;}
+                savefilefnd = true;
 
                 // Load auto-reset
                 XmlNode node = charNode.SelectSingleNode("AutoResetEnabled");

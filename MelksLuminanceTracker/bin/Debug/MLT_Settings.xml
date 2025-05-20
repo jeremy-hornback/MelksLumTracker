@@ -2,10 +2,10 @@
   <Character key="InfiniteLeaftide-Melka Summoner">
     <AutoResetEnabled>False</AutoResetEnabled>
     <coinusebank>False</coinusebank>
+    <progenable>True</progenable>
     <ConversionRate>66.2</ConversionRate>
     <ConversionLRate>66</ConversionLRate>
-    <pollRate>1</pollRate>
-    <progenable>True</progenable>
+    <pollRate>1</pollRate>    
   </Character>
   <Character key="InfiniteLeaftide-Melkoran">
     <AutoResetEnabled>False</AutoResetEnabled>
