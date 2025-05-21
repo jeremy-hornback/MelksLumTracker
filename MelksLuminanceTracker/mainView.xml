@@ -56,6 +56,8 @@
                 <control progid="DecalControls.Edit" name="txToInput" left="65" top="125" width="125" height="20" text=""/>
                 <control progid="DecalControls.PushButton" name="txCoinsBtn" left="25" top="150" width="60" height="20" text="Tx Coins"/>
                 <control progid="DecalControls.PushButton" name="txLumBtn" left="95" top="150" width="60" height="20" text="Tx Lum"/>
+                <control progid="DecalControls.PushButton" name="AutoTxCoinsBtn" left="0" top="175" width="160" height="20" text="Auto Tx: Disabled"/>
+                <control progid="DecalControls.Edit" name="autoTxInput" left="165" top="175" width="30" height="20" text="50"/>
             </control>
         </page>
         <page label="Cfg">

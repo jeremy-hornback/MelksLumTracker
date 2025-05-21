@@ -92,6 +92,7 @@ namespace MelksLuminanceTracker
         private int curTrinket = 0;
         private int coinclapavail = 0;
         private int pollRate = 1;
+        private int autotxcoincnt = 50;
         private TimeSpan elapsed;
         private TimeSpan timetolvl;
         private TimeSpan timeclap;
@@ -108,6 +109,7 @@ namespace MelksLuminanceTracker
         private bool isinitialized = false;
         private bool enbDebug = false;
         private bool savefilefnd = false;
+        private bool autotxcoin = false;
         private string txToName = "";
         private string configPath;
         private string characterKey;
@@ -271,6 +273,14 @@ namespace MelksLuminanceTracker
                     txToInput.Text = node7.InnerText;
                     txToName = node7.InnerText;
                 }
+
+                // Auto transfer coins
+                XmlNode node8 = charNode.SelectSingleNode("autoTxInput");
+                if (node8 != null && int.TryParse(node8.InnerText, out int rate4))
+                {
+                    autoTxInput.Text = node8.InnerText;
+                    autotxcoincnt = rate4;
+                }            
             }
             catch (Exception ex) {Util.WriteToChat($"LoadSettings Settings Error: {ex}");}
         }
@@ -337,6 +347,11 @@ namespace MelksLuminanceTracker
                 XmlElement txToNameElem = doc.CreateElement("txToName");
                 txToNameElem.InnerText = txToInput.Text;
                 ReplaceOrAppend(charNode, txToNameElem);
+
+                // Auto transfer Coins count
+                XmlElement autoTxInputElem = doc.CreateElement("autoTxInput");
+                autoTxInputElem.InnerText = autoTxInput.Text;
+                ReplaceOrAppend(charNode, autoTxInputElem);
     
                 doc.Save(configPath);
             }
@@ -571,8 +586,8 @@ namespace MelksLuminanceTracker
                 }
                 conversionCRate = conversionCRate * 1000000;
                 conversionLRate = conversionLRate * 1000000;
-                Util.WriteToChat($"Conversion Rate set to {conversionCRate:n} Coins per Luminance");
-                Util.WriteToChat($"Conversion Rate set to {conversionLRate:n} Luminance per coin");
+                Util.WriteToChat($"Conversion Rate set to 1 Enl Coin per {conversionCRate:n0} Luminance");
+                Util.WriteToChat($"Conversion Rate set to {conversionLRate:n0} Luminance per coin");
             }
             catch (Exception ex) {Util.WriteToChat($"updateconversion Error: {ex}");}
 		}
@@ -680,7 +695,7 @@ namespace MelksLuminanceTracker
                         tmphrs = 0;
                         tmpmin = xplvlrate * 60;
                     }
-                    if (tmphrs > 999) {tmphrs = 999;}
+                    if (tmphrs > 999) {tmphrs = 0; tmpmin=0;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
@@ -737,6 +752,15 @@ namespace MelksLuminanceTracker
                             timeclap = tmpclaptimehr + tmpclaptimemin;
                     }
                 }
+                //Coin Transfer
+                if (autotxcoin)
+                {
+                    if (currentCoins >= autotxcoincnt)
+                    {
+                        int.TryParse(autoTxInput.Text, out int autotxcoincnt);
+                        txStuff("Coins");
+                    }
+                }
                 if (effectiveOtherRate < 0){effectiveOtherRate=0;}
                 if (luminOtherRate < 0){luminOtherRate=0;}
                 if (luminkillRate < 0){luminkillRate=0;}
@@ -777,7 +801,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
         	    autoResetEnabled = !autoResetEnabled;
-                Util.WriteToChat($"autoResetEnabled = {autoResetEnabled}");
+                Util.WriteToChat($"autoResetEnabled = {(autoResetEnabled ? "Enabled" : "Disabled")}");
 		        autoResetBtn.Text = $"Auto-Reset Txfr: {(autoResetEnabled ? "On" : "Off")}";
                 SaveSettings();
 			}
@@ -855,7 +879,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
 				coinusebank = !coinusebank;
-                Util.WriteToChat($"Coin By Bank set to: {coinusebank}");
+                Util.WriteToChat($"Coin By Bank set to: {(coinusebank ? "Enabled" : "Disabled")}");
                 coinBankBtn.Text = $"Coin by Bank: {(coinusebank ? "On" : "Off")}";
                 SaveSettings();
 			}
@@ -882,7 +906,7 @@ namespace MelksLuminanceTracker
 			{
                 if (!isinitialized) {return;}
 				progenable = !progenable;
-                Util.WriteToChat($"Program Enable: {progenable}");
+                Util.WriteToChat($"Program Enable: {(progenable ? "Enabled" : "Disabled")}");
                 calcEnableBtn.Text = $"{(progenable ? "Enabled" : "Disabled")}";
                 totalReset();
                 SaveSettings();
@@ -980,6 +1004,21 @@ namespace MelksLuminanceTracker
 			catch (Exception ex) {Util.WriteToChat($"txLumBtn_Click Error: {ex}");}
 		}
 
+        [MVControlEvent("AutoTxCoinsBtn", "Click")]
+		void AutoTxCoinsBtn_Click(object sender, MVControlEventArgs e)
+		{
+			try
+			{
+                if (!isinitialized) {return;}
+                int.TryParse(autoTxInput.Text, out int autotxcoincnt);
+                autotxcoin = !autotxcoin;
+                Util.WriteToChat($"Auto Coin Transfer is {(autotxcoin ? "Enabled" : "Disabled")}");
+                AutoTxCoinsBtn.Text = $"Auto Tx: {(autotxcoin ? "Enabled" : "Disabled")}";
+                SaveSettings();
+			}
+			catch (Exception ex) {Util.WriteToChat($"txLumBtn_Click Error: {ex}");}
+		}
+
         private void txStuff(string totx)
         {
             try
@@ -993,8 +1032,9 @@ namespace MelksLuminanceTracker
                     if (tcointx == 0) {Util.WriteToChat("Not Enough Coins to Transfer"); return;}
                     Util.WriteToChat($"Transfering {tcointx} Coins to: {txToName}");
                     string tccmnd = $"/b t e {tcointx} \"{txToName}\"";
-                    //CoreManager.Current.Actions.InvokeChatParser("/b t e " + tcointx + " \"{txToName}\"";
                     Util.Command(tccmnd);
+                    currentCoins = 1;
+                    if (coinusebank){totalReset();}
                 }
                 else if (totx == "Lum")
                 {
@@ -1003,8 +1043,9 @@ namespace MelksLuminanceTracker
                     if (tlumtx == 0) {Util.WriteToChat("Not Enough Luminance to Transfer"); return;}
                     Util.WriteToChat($"Transfering {tlumtx} Luminance to: {txToName}");
                     string tlcmnd = $"/b t l {tlumtx} \"{txToName}\"";
-                    //CoreManager.Current.Actions.InvokeChatParser(
                     Util.Command(tlcmnd);
+                    currentLuminance = 1;
+                    if (autoResetEnabled){totalReset();}
                 }
             }
 			catch (Exception ex) {Util.WriteToChat($"txStuff Error: {ex}");}
@@ -1367,6 +1408,9 @@ namespace MelksLuminanceTracker
     
         [MVControlReference("txToInput")]
 		private ITextBox txToInput = null;
+        
+        [MVControlReference("autoTxInput")]
+		private ITextBox autoTxInput = null;
 
         [MVControlReference("coinRateLumLabel")]
         private IStaticText coinRateLumLabel = null;
@@ -1382,6 +1426,9 @@ namespace MelksLuminanceTracker
 
         [MVControlReference("calcEnableBtn")]
         private IButton calcEnableBtn = null;
+
+        [MVControlReference("AutoTxCoinsBtn")]
+        private IButton AutoTxCoinsBtn = null;
 
         [MVControlReference("luminKillLabel")]
         private IStaticText luminKillLabel = null;
