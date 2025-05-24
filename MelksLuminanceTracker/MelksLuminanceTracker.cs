@@ -1053,65 +1053,63 @@ namespace MelksLuminanceTracker
 
         private void reportsOutput(string rpt)  // Skippy's : You've gained 5,245,917 luminance in 15 seconds for 1,251,167,121 luminance per hour.
         {
+            string tmplumdiff;
+            string tmppyreal;
             if (rpt == "Lum") 
             {
-                int tlum = (int)lumdiff;
-                int tlumr = (int)luminRate;
+                tmplumdiff = StrValUpdate(lumdiff);
                 if (elapsed.Days > 0){
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
                 else if (elapsed.Hours > 0) {
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%h} Hours {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%h} Hours {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
                 else{
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
             }
             if (rpt == "LumE") 
             {
-                int tlum = (int)lumdiff;
-                int tlumr = (int)luminRate;
+                tmplumdiff = StrValUpdate(lumdiff);
                 if (elapsed.Days > 0){
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
                 else if (elapsed.Hours > 0) {
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%h} Hours {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%h} Hours {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
                 else{
-                    Util.WriteToChat($"You gained {tlum:n0} Luminance in {elapsed:%m} Minutes for {tlumr:n0} Luminance per hour.");}
-                Util.WriteToChat($"You are earning {lumRateCoin:n0} Luminance from Coins per hour @ {conversionLRate:n0} per coin");
-                Util.WriteToChat($"Your effective Luminance per hour is : {effectiveLRate:n0}");
+                    Util.WriteToChat($"You gained {tmplumdiff} Luminance in {elapsed:%m} Minutes for {tmplumstr} Luminance per hour.");}
+                Util.WriteToChat($"You are earning {tmplumRateCoin} Luminance from Coins per hour @ {conversionLRate:n0} per coin");
+                Util.WriteToChat($"Your effective Luminance per hour is : {tmpeffectiveLRate}");
             }
             if (rpt == "Coin") 
             {
-                int tpyreals = (int)curPyreals;
-                int cdiff = (int)coindiff;
+                tmppyreal = StrValUpdate(curPyreals);
                 if (elapsed.Days > 0){
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 else if (elapsed.Hours > 0) {
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 else {
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 if (timeclap.Days > 0){
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%d} Days {timeclap:%h} Hours {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%d} Days {timeclap:%h} Hours {timeclap:%m} Minutes");}
                 else if (timeclap.Hours > 0){
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%h} Hours {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%h} Hours {timeclap:%m} Minutes");}
                 else{
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%m} Minutes");}
 
             }
             if (rpt == "CoinE") 
             {
-                int tpyreals = (int)curPyreals;
-                int cdiff = (int)coindiff;
+                tmppyreal = StrValUpdate(curPyreals);
                 if (elapsed.Days > 0){
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%d} Days {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 else if (elapsed.Hours > 0) {
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%h} Hours {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 else {
-                    Util.WriteToChat($"You gained {cdiff:n0} Coins in {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
+                    Util.WriteToChat($"You gained {coindiff:n0} Coins in {elapsed:%m} Minutes for {coinRate:n} Coins per hour.");}
                 Util.WriteToChat($"You are earning {coinRateLum:n} Coins from Luminancer per hour @ {conversionCRate:n0} per coin");
                 if (timeclap.Days > 0){
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%d} Days {timeclap:%h} Hours {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%d} Days {timeclap:%h} Hours {timeclap:%m} Minutes");}
                 else if (timeclap.Hours > 0){
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%h} Hours {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%h} Hours {timeclap:%m} Minutes");}
                 else{
-                    Util.WriteToChat($"You have {tpyreals:n0} Pyreals and can continue Clapping for {timeclap:%m} Minutes");}
+                    Util.WriteToChat($"You have {tmppyreal} Pyreals and can continue Clapping for {timeclap:%m} Minutes");}
                 Util.WriteToChat($"Your effective Coins per hour is : {effectiveCRate:n}");
             }
             if (rpt == "Kill") 
