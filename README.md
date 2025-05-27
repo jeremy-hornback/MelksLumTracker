@@ -12,6 +12,7 @@ Console Commands: <br />
 /mlt report kills <br />
 /mlt report xp <br />
 /mlt silentpoll <br />
+/mlt mode [normal/eggs/shells/timelost/snowman/jams/skulls] <br />
 /mlt txcoins <br />
 /mlt txlum <br />
  <br />
