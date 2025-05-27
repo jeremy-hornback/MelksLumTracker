@@ -38,6 +38,7 @@ using System.Text.RegularExpressions;
 
 namespace MelksLuminanceTracker
 {
+  
     //Attaches events from core
 	[WireUpBaseEvents]
 
@@ -89,10 +90,20 @@ namespace MelksLuminanceTracker
         private long current_luminance = 0;
         private int currentcoincount;
         private int curAetheria = 0;
+        private int curBAetheria = 0;
         private int curTrinket = 0;
         private int coinclapavail = 0;
         private int pollRate = 1;
         private int autotxcoincnt = 50;
+        private int CoinMode = 0;  //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam, 6=Skulls
+        private int curFaltTrinket = 0;
+        private double curMMD = 0;
+        private int curTimelostCoins = 0;
+        private int curSlimyShells = 0;
+        private int curPengEgg = 0;
+        private int curJams = 0;
+        private int curSkulls = 0;
+        private int curWEC = 0;
         private TimeSpan elapsed;
         private TimeSpan timetolvl;
         private TimeSpan timeclap;
@@ -167,7 +178,6 @@ namespace MelksLuminanceTracker
 				pollTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateUI);
                 updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(QuickUpdateUI);
                 clrTimer.Elapsed += new System.Timers.ElapsedEventHandler(eatClear);
-                MessageProcessed += new EventHandler<Decal.Adapter.MessageProcessedEventArgs>(Core_MessageProcessed);
                 pollTimer.Interval = 60000;
                 updateTimer.Interval = 5000;
                 clrTimer.Interval = 2000;
@@ -195,7 +205,6 @@ namespace MelksLuminanceTracker
 				// Unsubscribe to events here, but know that this event is not gauranteed to happen. I've never seen it not fire though.
 				// This is not the proper place to free up resources, but... its the easy way. It's not proper because of above statement.
 				//Globals.Core.WorldFilter.ChangeObject -= new EventHandler<ChangeObjectEventArgs>(WorldFilter_ChangeObject2);
-                MessageProcessed -= new EventHandler<Decal.Adapter.MessageProcessedEventArgs>(Core_MessageProcessed);
                 pollTimer?.Stop();
                 clrTimer?.Stop();
                 updateTimer?.Stop();
@@ -366,50 +375,7 @@ namespace MelksLuminanceTracker
             else
                 parent.AppendChild(newElement);
         }
-
-        void Core_MessageProcessed(object sender, Decal.Adapter.MessageProcessedEventArgs e)
-		{
-			//Need this to track luminance
-			switch (e.Message.Type)
-			{
-				case 0x02CF: //Set character qword
-					{
-						int key = e.Message.Value<int>("key");
-						if (key == 0x06)
-						{
-							current_luminance = e.Message.Value<long>("value");
-                            Util.WriteToChat($"Current_Luminance Update: {current_luminance}");
-						}
-					}
-					break;
-				case 0xF7B0: //Ordered message
-					switch (e.Message.Value<int>("event"))
-					{
-						case 0x0013: //Login character
-							{
-								Decal.Adapter.MessageStruct properties = e.Message.Struct("properties");
-								if ((properties.Value<int>("flags") & 0x00000080) > 0)
-								{
-									short qwordcount = properties.Value<short>("qwordCount");
-									for (short i = 0; i < qwordcount; ++i)
-									{
-										int key = properties.Struct("qwords").Struct(i).Value<int>("key");
-										if (key == 0x06)
-										{
-											current_luminance = properties.Struct("qwords").Struct(i).Value<long>("value");
-                                            Util.WriteToChat($"Current_Luminance Update: {current_luminance}");
-											break;
-										}
-									}
-								}
-							}
-							break;
-					}
-					break;
-			}
-            
-		}
-
+        
         private void UpdateUI(Object source, System.Timers.ElapsedEventArgs e)
 		{
 			try
@@ -472,7 +438,13 @@ namespace MelksLuminanceTracker
                 lumRateCoinLabel.Text = $"Coins-Lum/hr: {tmplumRateCoin}";
 				effectiveCRateLabel.Text = $"Effective C/hr: {effectiveCRate}";
 				effectiveLRateLabel.Text = $"Effective L/hr: {tmpeffectiveLRate}";
-                atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount} CAvail: {coinclapavail}";
+                if (CoinMode == 0) {atcCurLbl.Text = $"A: {curAetheria} T: {curTrinket} C: {currentcoincount} CAvail: {coinclapavail}";} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam
+                else if (CoinMode == 1) {atcCurLbl.Text = $"Eggs: {curPengEgg} C: {currentcoincount} MMD: {curMMD:n0}";} 
+                else if (CoinMode == 2) {atcCurLbl.Text = $"Shells: {curSlimyShells}  MMD: {curMMD:n0} MK: {curMythKey}";}
+                else if (CoinMode == 3) {atcCurLbl.Text = $"Anc Pyreal: {curTimelostCoins}  C: {currentcoincount}";}
+                else if (CoinMode == 4) {atcCurLbl.Text = $"BA: {curBAetheria} AFT: {curFaltTrinket} WC: {curWEC} MMD: {curMMD:n0} CAvail: {coinclapavail}";}
+                else if (CoinMode == 5) {atcCurLbl.Text = $"Jams: {curJams} C: {currentcoincount}";}
+                else if (CoinMode == 6) {atcCurLbl.Text = $"Skulls: {curSkulls} WEC: {currentcoincount:n0} MMD: {curMMD:n0}";}
                 //Spec Tab
                 KillLabel.Text = $"Kills: {killsTotal}";
                 KillHrLabel.Text = $"Kills/hr: {killsperhr}";
@@ -602,7 +574,7 @@ namespace MelksLuminanceTracker
                 xpInitVal = -1;
                 currentcoincount = 0;
                 coinclapavail = 0;
-                curAetheria = 0;
+                curAetheria = 0;                
                 curTrinket = 0;
                 killLuminance = 0;
                 lumdiff = 0;
@@ -621,6 +593,15 @@ namespace MelksLuminanceTracker
                 curWEnlCoin = 0;
                 curLegKey = 0;
                 curMythKey = 0;
+                curBAetheria = 0;
+                curFaltTrinket = 0;
+                curTimelostCoins = 0;
+                curSlimyShells = 0;
+                curPengEgg = 0;
+                curSkulls = 0;
+                curJams = 0;
+                curMMD = 0;
+                curWEC = 0;
                 
 				startTime = DateTime.Now;
                 //Main Tab
@@ -642,7 +623,13 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";
+                if (CoinMode == 0) {atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam
+                else if (CoinMode == 1) {atcCurLbl.Text = "Eggs: 0 C: 0 MMD: 0";} 
+                else if (CoinMode == 2) {atcCurLbl.Text = "Shells: 0  MMD: 0 MK: 0";}
+                else if (CoinMode == 3) {atcCurLbl.Text = "Anc Pyrl: 0  C: 0";}
+                else if (CoinMode == 4) {atcCurLbl.Text = "BA: 0 AFT: 0 WC: 0 CAvail: 0";}
+                else if (CoinMode == 5) {atcCurLbl.Text = "Jams: 0 C: 0";}
+                else if (CoinMode == 6) {atcCurLbl.Text = "Skulls: 0 WEC: 0 MMD: 0";}
                 //XP Tab
                 xpTotalLabel.Text = "Total XP: 0";
                 xpEarnedLabel.Text = "Earned XP: 0";
@@ -664,11 +651,58 @@ namespace MelksLuminanceTracker
                 elapsed = DateTime.Now - startTime;
                 hours = elapsed.TotalHours;
                 //Coin gen
-                if ((curAetheria >= 1) && (!coinusebank)){
-                    if (curTrinket >= 1){
-                        currentcoincount += 1;
-                        curAetheria -= 1;
-                        curTrinket -= 1;
+                if (CoinMode == 0)//0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam)
+                {
+                    if ((curAetheria >= 1) && (!coinusebank)){  
+                        if (curTrinket >= 1){
+                            currentcoincount += 1;
+                            curAetheria -= 1;
+                            curTrinket -= 1;
+                        }
+                    }
+                }
+                else if (CoinMode == 1) //curPengEgg
+                {
+                    if (curPengEgg >= 1){
+                        currentcoincount = (int)(curPengEgg / 10);
+                        curMMD = (int)(curPengEgg / 1);
+                    }
+                }
+                else if (CoinMode == 2) //curSlimyShells
+                {
+                    if (curSlimyShells >= 1){
+                        curMMD = (int)(curSlimyShells / 0.285714);
+                        curMythKey = (int)(curSlimyShells / 20);
+                    }
+                }
+                else if (CoinMode == 3) //curTimelostCoins  100 tlc = 37 coins
+                {
+                    if (curTimelostCoins >= 1){
+                        currentcoincount = (int)(curTimelostCoins / 2.7027027027);
+                    }
+                }
+                else if (CoinMode == 4) // curBAetheria, curFaltTrinket
+                {
+                    if (curBAetheria >= 1){
+                        if (curFaltTrinket >= 1){
+                            curWEC += 3;
+                            curBAetheria -= 1;
+                            curFaltTrinket -= 1;
+                            currentcoincount += 3;
+                        }
+                    }
+                }
+                else if (CoinMode == 5) //curJams - 100 Jam = 10 Coins
+                {
+                    if (curJams >= 1){
+                        currentcoincount = (int)(curJams / 10);
+                    }
+                }
+                else if (CoinMode == 6)  //curSkulls 100 Skulls = 200 WEC 80 MMD
+                {
+                    if (curSkulls >= 1){
+                        curMMD = (int)(curSkulls / 1.25);
+                        currentcoincount = (int)(curSkulls * 2);
                     }
                 }
                 killsperhr = hours > 0 ? Math.Round(killsTotal / hours) : 0;
@@ -682,7 +716,7 @@ namespace MelksLuminanceTracker
                 xpCur = CoreManager.Current.CharacterFilter.TotalXP;
                 xpDiff = xpCur - xpInitVal;
                 xpRate = hours > 0 ? Math.Round(xpDiff / hours, 1) : 0;
-                if ((xpToLevel > 0) && (xpRate > 0))
+                if ((xpToLevel > 1) && (xpRate > 1))
                 {
                     double xplvlrate = xpToLevel / xpRate;
                     double tmphrs;
@@ -695,7 +729,7 @@ namespace MelksLuminanceTracker
                         tmphrs = 0;
                         tmpmin = xplvlrate * 60;
                     }
-                    if (tmphrs > 999) {tmphrs = 0; tmpmin=0;}
+                    if (tmphrs > 999) {Util.WriteToChat($"{tmphrs}"); tmphrs = 0; tmpmin=0;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
@@ -1055,7 +1089,7 @@ namespace MelksLuminanceTracker
         {
             string tmplumdiff;
             string tmppyreal;
-            if (rpt == "Lum") 
+            if (rpt == "Lum")
             {
                 tmplumdiff = StrValUpdate(lumdiff);
                 if (elapsed.Days > 0){
@@ -1141,8 +1175,9 @@ namespace MelksLuminanceTracker
         [BaseEvent("ChatBoxMessage")]
         private void  Current_ChatBoxMessage(object sender, ChatTextInterceptEventArgs e)
         {
-            try
-            { //Coruscating Death gives you Ancient Empyrean Trinket.  Coruscating Death gives you Coalesced Aetheria.
+            try 
+            {
+                int startmode = CoinMode;
                 //Util.WriteToChat($"Message: {e.Text.ToLower()}");
                 string checkstr = e.Text.ToLower();
                 if (checkstr.StartsWith("[[bank] your balances are:")){bankdata = true; }
@@ -1223,11 +1258,32 @@ namespace MelksLuminanceTracker
                         }
                 }                
                 if (!coinusebank){
-                    bool isAetheria = Regex.IsMatch(checkstr, @"gives you coalesced aetheria.$");
-                    bool isTrinket = Regex.IsMatch(checkstr, @"gives you ancient empyrean trinket.$");
-                    if (isAetheria){curAetheria += 1;}
-                    if (isTrinket) {curTrinket += 1;}
+                    bool isShell = Regex.IsMatch(checkstr, @"olthoi gives you olthoi slimy shell.$"); //Repulsive Olthoi gives you Olthoi Slimy Shell.   350 MMDs and 5 Completed Mythical Keys per 100
+                    bool isShell2 = Regex.IsMatch(checkstr, @"slug gives you olthoi slimy shell.$");
+                    bool isShell3 = Regex.IsMatch(checkstr, @"parasite gives you olthoi slimy shell.$");
+                    bool isSkull = Regex.IsMatch(checkstr, @"bones gives you badass skull.$"); //Slimy Badass Bones gives you Badass Skull.   80 MMDs 200 Weakly Coins
+                    bool isPyreal = Regex.IsMatch(checkstr, @"warrior gives you ancient pyreal.$"); //Ancient Warrior gives you Ancient Pyreal. Time-Lost Warrior gives you Ancient Pyreal.  37 Enlightened Coins. per 100
+                    bool isPyreal2 = Regex.IsMatch(checkstr, @"one gives you ancient pyreal.$");//Forgotten One gives you Ancient Pyreal.
+                    bool isEgg = Regex.IsMatch(checkstr, @"penguin gives you dire siraluun egg.$"); //Dire Siraluun Penguin gives you Dire Siraluun Egg.  100 Trade Notes (250,000).10 Enlightened Coin. per 100
+                    bool isSnowTrnk = Regex.IsMatch(checkstr, @"snowman gives you ancient falatacot trinket.$"); //Unhappy Snowman gives you Ancient Falatacot Trinket.
+                    bool isSnowAeth = Regex.IsMatch(checkstr, @"snowman gives you coalesced aetheria.$"); //Unhappy Snowman gives you Coalesced Aetheria.
+                    bool isSnowMMD = Regex.IsMatch(checkstr, @"snowman gives you trade note (250,000).$"); //Unhappy Snowman gives you Trade Note (250,000).
+                    bool isJam = Regex.IsMatch(checkstr, @"golem gives you straberry jam jar.$"); //Strawberry Jam Golem gives you Straberry Jam Jar.
+                    bool isAetheria = Regex.IsMatch(checkstr, @"gives you coalesced aetheria.$"); //Coruscating Death gives you Coalesced Aetheria.
+                    bool isTrinket = Regex.IsMatch(checkstr, @"gives you ancient empyrean trinket.$"); //Coruscating Death gives you Ancient Empyrean Trinket.
+                    
+                    if (isSnowAeth) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curBAetheria += 1;} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam, 6=Skull  
+                    if (isSnowTrnk) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curFaltTrinket += 1;}
+                    if (isSnowMMD) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curMMD += 1;} 
+                    if (isShell) {CoinMode = 2; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curSlimyShells += 1;}
+                    if (isPyreal || isPyreal2) {CoinMode = 3; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curTimelostCoins += 1;}
+                    if (isEgg) {CoinMode = 1; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curPengEgg += 1;}
+                    if (isJam) {CoinMode = 5; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curJams += 1;}
+                    if (isSkull) {CoinMode = 6; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curSkulls += 1;}
+                    if (isAetheria && !isSnowAeth){CoinMode = 0; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curAetheria += 1;}
+                    if (isTrinket) {CoinMode = 0; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curTrinket += 1;}
                 }
+                
             }
             catch (Exception ex)
             {
