@@ -1352,6 +1352,7 @@ namespace MelksLuminanceTracker
                     Util.WriteToChat("/mlt txcoins");
                     Util.WriteToChat("/mlt txlum");
                     Util.WriteToChat("/mlt silentpoll");
+                    Util.WriteToChat("/mlt mode [normal/eggs/shells/timelost/snowman/jams/skulls]");
                     Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
                     Util.WriteToChat("The Coin-Lum Conversion value is the amount of luminance you get for 1 coin.");
                     Util.WriteToChat("It will calculate how many coins/hr you make just from luminance.");
@@ -1377,6 +1378,50 @@ namespace MelksLuminanceTracker
                     if (progenable == true) {Util.WriteToChat("Already Running"); return;}
                     Util.WriteToChat("Calculations Started");
                     progenable= true;
+                }
+                if (tokens[1].ToLower() == "mode")
+                {
+                    if (tokens.Length < 3 )
+                    {
+                        CoinMode = 0;
+                        Util.WriteToChat("Mode Changed to: Normal Trinket/Aetheria");
+                        totalReset();
+                        return;
+                    } 
+                    if (tokens[2].ToLower() == "normal")
+                    {
+                        CoinMode = 0;}
+                    if ((tokens[2].ToLower() == "eggs") || (tokens[2].ToLower() == "egg"))
+                    {
+                        CoinMode = 1;}
+                    if ((tokens[2].ToLower() == "shells") || (tokens[2].ToLower() == "shell"))
+                    {
+                        CoinMode = 2;}
+                    if ((tokens[2].ToLower() == "timelost") || (tokens[2].ToLower() == "timelostcoins"))
+                    {
+                        CoinMode = 3;}
+                    if ((tokens[2].ToLower() == "timelost") || (tokens[2].ToLower() == "timelostcoins"))
+                    {
+                        CoinMode = 3;}
+                    if ((tokens[2].ToLower() == "snowman") || (tokens[2].ToLower() == "snowmen"))
+                    {
+                        CoinMode = 4;}
+                    if ((tokens[2].ToLower() == "jams") || (tokens[2].ToLower() == "jam"))
+                    {
+                        CoinMode = 5;}
+                    if ((tokens[2].ToLower() == "skulls") || (tokens[2].ToLower() == "skull"))
+                    {
+                        CoinMode = 6;}
+                    string tmpmodestr = "";
+                    if (CoinMode == 0){tmpmodestr = "Normal Trinket/Aetheria";}
+                    else if (CoinMode == 1){tmpmodestr = "Eggs";}
+                    else if (CoinMode == 2){tmpmodestr = "Slimy Shells";}
+                    else if (CoinMode == 3){tmpmodestr = "Ancient Pyreals";}
+                    else if (CoinMode == 4){tmpmodestr = "Snowmen Faltacot Trinkets/Blue Aetheria";}
+                    else if (CoinMode == 5){tmpmodestr = "Straberry Jam Jars";}
+                    else if (CoinMode == 6){tmpmodestr = "Badass Bone Skulls";}
+                    Util.WriteToChat($"Mode Changed to: {tmpmodestr}");
+                    totalReset();
                 }
                 if (tokens[1].ToLower() == "debug")
                 {
