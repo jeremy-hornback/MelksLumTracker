@@ -1272,16 +1272,28 @@ namespace MelksLuminanceTracker
                     bool isAetheria = Regex.IsMatch(checkstr, @"gives you coalesced aetheria.$"); //Coruscating Death gives you Coalesced Aetheria.
                     bool isTrinket = Regex.IsMatch(checkstr, @"gives you ancient empyrean trinket.$"); //Coruscating Death gives you Ancient Empyrean Trinket.
                     
-                    if (isSnowAeth) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curBAetheria += 1;} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam, 6=Skull  
-                    if (isSnowTrnk) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curFaltTrinket += 1;}
-                    if (isSnowMMD) {CoinMode = 4; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curMMD += 1;} 
-                    if (isShell) {CoinMode = 2; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curSlimyShells += 1;}
-                    if (isPyreal || isPyreal2) {CoinMode = 3; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curTimelostCoins += 1;}
-                    if (isEgg) {CoinMode = 1; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curPengEgg += 1;}
-                    if (isJam) {CoinMode = 5; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curJams += 1;}
-                    if (isSkull) {CoinMode = 6; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curSkulls += 1;}
-                    if (isAetheria && !isSnowAeth){CoinMode = 0; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curAetheria += 1;}
-                    if (isTrinket) {CoinMode = 0; if (startmode != CoinMode){Util.WriteToChat($"Mode Changed to: {CoinMode}");  totalReset();} curTrinket += 1;}
+                    if (isSnowAeth) {CoinMode = 4; if (startmode != CoinMode){totalReset();} curBAetheria += 1;} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam, 6=Skull  
+                    if (isSnowTrnk) {CoinMode = 4; if (startmode != CoinMode){totalReset();} curFaltTrinket += 1;}
+                    if (isSnowMMD) {CoinMode = 4; if (startmode != CoinMode){totalReset();} curMMD += 1;} 
+                    if (isShell) {CoinMode = 2; if (startmode != CoinMode){totalReset();} curSlimyShells += 1;}
+                    if (isPyreal || isPyreal2) {CoinMode = 3; if (startmode != CoinMode){totalReset();} curTimelostCoins += 1;}
+                    if (isEgg) {CoinMode = 1; if (startmode != CoinMode){totalReset();} curPengEgg += 1;}
+                    if (isJam) {CoinMode = 5; if (startmode != CoinMode){totalReset();} curJams += 1;}
+                    if (isSkull) {CoinMode = 6; if (startmode != CoinMode){totalReset();} curSkulls += 1;}
+                    if (isAetheria && !isSnowAeth){CoinMode = 0; if (startmode != CoinMode){totalReset();} curAetheria += 1;}
+                    if (isTrinket) {CoinMode = 0; if (startmode != CoinMode){totalReset();} curTrinket += 1;}
+                    if (startmode != CoinMode)
+                    {
+                        string tmpmodestr = "";
+                        if (CoinMode == 0){tmpmodestr = "Normal Trinket/Aetheria";}
+                        else if (CoinMode == 1){tmpmodestr = "Eggs";}
+                        else if (CoinMode == 2){tmpmodestr = "Slimy Shells";}
+                        else if (CoinMode == 3){tmpmodestr = "Ancient Pyreals";}
+                        else if (CoinMode == 4){tmpmodestr = "Snowmen Faltacot Trinkets/Blue Aetheria";}
+                        else if (CoinMode == 5){tmpmodestr = "Straberry Jam Jars";}
+                        else if (CoinMode == 6){tmpmodestr = "Badass Bone Skulls";}
+                        Util.WriteToChat($"Mode Changed to: {tmpmodestr}");
+                    }
                 }
                 
             }
