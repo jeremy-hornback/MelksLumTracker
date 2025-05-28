@@ -220,8 +220,7 @@ namespace MelksLuminanceTracker
 			try
 			{
                 		//Destroy the view.
-                        xpView.Dispose();
-                        xpView2.Dispose();
+                        
                			MVWireupHelper.WireupEnd(this);
 			}
 			catch (Exception ex) {Util.WriteToChat($"Shutdown Error: {ex}");}
@@ -279,6 +278,8 @@ namespace MelksLuminanceTracker
                 pollTimer?.Dispose();
                 clrTimer?.Dispose();
                 updateTimer?.Dispose();
+                xpView.Dispose();
+                xpView2.Dispose();
 				pollTimer = null;
                 clrTimer = null;
                 updateTimer = null;                
@@ -1173,8 +1174,15 @@ namespace MelksLuminanceTracker
                     popupinit2 = true;
                     popupvis2 = true;}
                 else{
-                    xpView2.Visible = !xpView2.Visible;
-                    popupvis2 = !popupvis2;}
+                    if (popupvis2 == true){
+                        xpView2.Visible = false;
+                        popupvis2 = false;
+                    }
+                    else {
+                        xpView2.Visible = true;
+                        popupvis2 = true;
+                    }
+                }
 			}
 			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
 		}
