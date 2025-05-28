@@ -59,6 +59,9 @@
   <ItemGroup>
     <EmbeddedResource Include="mainView.xml">
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="subView.xml">
+      <SubType>Designer</SubType>
     </EmbeddedResource> 
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

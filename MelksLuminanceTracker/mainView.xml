@@ -74,6 +74,7 @@
                 <control progid="DecalControls.StaticText" name="pollratelbl" left="5" top="150" width="60" height="20" text="Poll Rate:"/>
                 <control progid="DecalControls.Edit" name="pollRateInput" left="70" top="150" width="50" height="20" text="1"/>
                 <control progid="DecalControls.PushButton" name="UpdatePoll" left="130" top="150" width="70" height="20" text="Update Poll"/>
+                <control progid="DecalControls.PushButton" name="XPPopupBtn" left="5" top="175" width="70" height="20" text="XP Popup"/>
         	</control>
         </page>
 

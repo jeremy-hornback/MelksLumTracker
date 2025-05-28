@@ -17,6 +17,11 @@ using Decal.Adapter.Wrappers;
 using MyClasses.MetaViewWrappers;
 using System.Text.RegularExpressions;
 
+using VirindiViewService;
+using VirindiViewService.Controls;
+using VirindiViewService.XMLParsers;
+
+
 /*
  * Created by Mag-nus. 8/19/2011, VVS added by Virindi-Inquisitor.
  * 
@@ -44,6 +49,7 @@ namespace MelksLuminanceTracker
 
     //View (UI) handling
     [MVView("MelksLuminanceTracker.mainView.xml")]
+    //[MVView("MelksLuminanceTracker.subView.xml")]
     [MVWireUpControlEvents]
 
 	// FriendlyName is the name that will show up in the plugins list of the decal agent (the one in windows, not in-game)
@@ -52,7 +58,8 @@ namespace MelksLuminanceTracker
 	// The other key here is that mainView.xml must be included as an embeded resource. If its not, your plugin will not show up in-game.
 	[FriendlyName("MelksLuminanceTracker")]
 	public class PluginCore : PluginBase
-	{        
+	{   
+        internal static Decal.Adapter.Wrappers.PluginHost MyHost;
 		private double initialCoins = -1;
 		private double initialLuminance = -1;
 		private double currentCoins;
@@ -121,6 +128,7 @@ namespace MelksLuminanceTracker
         private bool enbDebug = false;
         private bool savefilefnd = false;
         private bool autotxcoin = false;
+        private bool popupvis = false;
         private string txToName = "";
         private string configPath;
         private string characterKey;
@@ -136,6 +144,51 @@ namespace MelksLuminanceTracker
         private string tmpxpdiff = "0";
         private string tmpXPtoLevel = "0";
         private string tmpXPTotal = "0";
+        //popup 
+        [MVControlReference("XPPopupBtn")] private IButton XPPopupBtn;
+        private MyClasses.MetaViewWrappers.IView xpView;
+        private ViewProperties properties;
+        private ControlGroup controls;
+        //controls
+        [MVControlReference("luminCurrentLabel")] private IStaticText luminCurrentLabel = null;
+		[MVControlReference("coinCurrentLabel")] private IStaticText coinCurrentLabel = null;
+		[MVControlReference("luminRateLabel")] private IStaticText luminRateLabel = null;
+		[MVControlReference("coinRateLabel")] private IStaticText coinRateLabel = null;
+        [MVControlReference("lumRateCoinLabel")] private IStaticText lumRateCoinLabel = null;
+		[MVControlReference("effectiveCRateLabel")] private IStaticText effectiveCRateLabel = null;
+        [MVControlReference("effectiveLRateLabel")] private IStaticText effectiveLRateLabel = null;
+		[MVControlReference("timeLabel")] private IStaticText timeLabel = null;
+		[MVControlReference("convRateInput")] private ITextBox convRateInput = null;
+        [MVControlReference("convRateLInput")] private ITextBox convRateLInput = null;
+        [MVControlReference("pollRateInput")] private ITextBox pollRateInput = null;
+        [MVControlReference("txToInput")] private ITextBox txToInput = null;
+        [MVControlReference("autoTxInput")] private ITextBox autoTxInput = null;
+        [MVControlReference("coinRateLumLabel")] private IStaticText coinRateLumLabel = null;
+        [MVControlReference("atcCurLbl")] private IStaticText atcCurLbl = null;
+        [MVControlReference("coinBankBtn")] private IButton coinBankBtn = null;
+        [MVControlReference("autoResetBtn")] private IButton autoResetBtn = null;
+        [MVControlReference("calcEnableBtn")] private IButton calcEnableBtn = null;
+        [MVControlReference("AutoTxCoinsBtn")] private IButton AutoTxCoinsBtn = null;
+        [MVControlReference("luminKillLabel")] private IStaticText luminKillLabel = null;
+        [MVControlReference("luminOtherlLabel")] private IStaticText luminOtherlLabel = null;
+        [MVControlReference("KillLabel")] private IStaticText KillLabel = null;
+        [MVControlReference("KillHrLabel")] private IStaticText KillHrLabel = null;
+        [MVControlReference("coinRateKillLumLabel")] private IStaticText coinRateKillLumLabel = null;
+        [MVControlReference("effectiveKillRateLabel")] private IStaticText effectiveKillRateLabel = null;
+        [MVControlReference("luminKillRateLabel")] private IStaticText luminKillRateLabel = null;
+        [MVControlReference("luminOtherRateLabel")] private IStaticText luminOtherRateLabel = null;
+        [MVControlReference("coinRateOtherLumLabel")] private IStaticText coinRateOtherLumLabel = null;
+        [MVControlReference("effectiveOtherRateLabel")] private IStaticText effectiveOtherRateLabel = null;
+        [MVControlReference("xpRateLabel")] private IStaticText xpRateLabel = null;
+        [MVControlReference("xpTotalLabel")] private IStaticText xpTotalLabel = null;
+        [MVControlReference("xpEarnedLabel")] private IStaticText xpEarnedLabel = null;
+        [MVControlReference("xpToLvlLabel")] private IStaticText xpToLvlLabel = null;
+        [MVControlReference("xpTimetoLvlLabel")] private IStaticText xpTimetoLvlLabel = null;
+        //Poppup controls
+        private IStaticText subtimeLabel;
+        private IStaticText subluminRateLabel;
+        private IStaticText subcoinRateLabel;
+        private IStaticText subKillHrLabel;
         //PopoutWindow tempPopoutwindow = new PopoutWindow();
 
 		protected override void Startup()
@@ -144,6 +197,7 @@ namespace MelksLuminanceTracker
 			{
 				// This initializes our static Globals class with references to the key objects your plugin will use, Host and Core.
 				// The OOP way would be to pass Host and Core to your objects, but this is easier.
+                MyHost = Host;
 				Globals.Init("MelksLuminanceTracker", Host, Core);
 				//Initialize the view.
 				MVWireupHelper.WireupStart(this, Host);                
@@ -189,6 +243,7 @@ namespace MelksLuminanceTracker
                 LoadSettings();
                 updateconversion();
                 isinitialized = true;
+                XPPopupBtn.Click += (s, es) => showpopup();
                 if (pollRate > 1) {updatePolling();}
                 if (!progenable) {Util.WriteToChat("Program is currently Disabled");}
                 bankPoll(true);
@@ -462,6 +517,15 @@ namespace MelksLuminanceTracker
                 xpRateLabel.Text = $"XP/hr: {tmpXPRate}";
                 xpToLvlLabel.Text = $"XP to Level: {tmpXPtoLevel}";
                 xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.Hours:D2}:{timetolvl.Minutes:D2}";
+
+                //Pop Up View
+                if (popupvis)
+                {
+                    subtimeLabel.Text = $"Run Time: {elapsed.TotalHours:n0}:{elapsed.Minutes:D2}";
+                    subluminRateLabel.Text = $"Lum/hr: {tmplumstr}";
+                    subcoinRateLabel.Text = $"Coins/hr: {coinRate}";
+                    subKillHrLabel.Text = $"Kills/hr: {killsperhr}";
+                }
             }
             catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
         }
@@ -637,7 +701,7 @@ namespace MelksLuminanceTracker
                 xpToLvlLabel.Text = "XP to Level: 0";
                 xpTimetoLvlLabel.Text = "Time to Lvl: 00:00";
                 if (!progenable){ return;}
-                bankPoll(true);				
+                bankPoll(true);
             }
             catch (Exception ex) {Util.WriteToChat($"totalReset Error: {ex}");}
         }
@@ -661,24 +725,24 @@ namespace MelksLuminanceTracker
                         }
                     }
                 }
-                else if (CoinMode == 1) //curPengEgg
+                else if (CoinMode == 1) //curPengEgg 100 eggs = 10 coins 100 mmd
                 {
                     if (curPengEgg >= 1){
-                        currentcoincount = (int)(curPengEgg / 10);
-                        curMMD = (int)(curPengEgg / 1);
+                        currentcoincount = (int)(curPengEgg * .1);
+                        curMMD = (int)(curPengEgg * 1);
                     }
                 }
-                else if (CoinMode == 2) //curSlimyShells
+                else if (CoinMode == 2) //curSlimyShells  100 shells = 350 MMD and 5 mk
                 {
                     if (curSlimyShells >= 1){
-                        curMMD = (int)(curSlimyShells / 0.285714);
-                        curMythKey = (int)(curSlimyShells / 20);
+                        curMMD = (int)(curSlimyShells * 3.5);
+                        curMythKey = (int)(curSlimyShells * .05);
                     }
                 }
                 else if (CoinMode == 3) //curTimelostCoins  100 tlc = 37 coins
                 {
                     if (curTimelostCoins >= 1){
-                        currentcoincount = (int)(curTimelostCoins / 2.7027027027);
+                        currentcoincount = (int)(curTimelostCoins * .37);
                     }
                 }
                 else if (CoinMode == 4) // curBAetheria, curFaltTrinket
@@ -695,13 +759,13 @@ namespace MelksLuminanceTracker
                 else if (CoinMode == 5) //curJams - 100 Jam = 10 Coins
                 {
                     if (curJams >= 1){
-                        currentcoincount = (int)(curJams / 10);
+                        currentcoincount = (int)(curJams * .1);
                     }
                 }
                 else if (CoinMode == 6)  //curSkulls 100 Skulls = 200 WEC 80 MMD
                 {
                     if (curSkulls >= 1){
-                        curMMD = (int)(curSkulls / 1.25);
+                        curMMD = (int)(curSkulls * .8);
                         currentcoincount = (int)(curSkulls * 2);
                     }
                 }
@@ -1053,6 +1117,27 @@ namespace MelksLuminanceTracker
 			catch (Exception ex) {Util.WriteToChat($"txLumBtn_Click Error: {ex}");}
 		}
 
+        private void showpopup()
+        {
+			try
+			{
+                if (!popupvis){
+                    string tmpmainstyle = "MelksLuminanceTracker.subView.xml";
+                    xpView = MyClasses.MetaViewWrappers.ViewSystemSelector.CreateViewResource(MyHost, tmpmainstyle);
+                    xpView.Activate();
+                    xpView.Visible = true;
+                    subtimeLabel = (IStaticText)xpView["subtimeLabel"];
+                    subluminRateLabel = (IStaticText)xpView["subluminRateLabel"];
+                    subcoinRateLabel = (IStaticText)xpView["subcoinRateLabel"];
+                    subKillHrLabel = (IStaticText)xpView["subKillHrLabel"];
+                    popupvis = true;}
+                else{
+                    xpView.Visible = false;
+                    popupvis = false;}
+			}
+			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
+		}
+        
         private void txStuff(string totx)
         {
             try
@@ -1482,109 +1567,7 @@ namespace MelksLuminanceTracker
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"Command Line Processing Error: {ex}");}
-        }
-
-		[MVControlReference("luminCurrentLabel")]
-		private IStaticText luminCurrentLabel = null;
-
-		[MVControlReference("coinCurrentLabel")]
-		private IStaticText coinCurrentLabel = null;
-
-		[MVControlReference("luminRateLabel")]
-		private IStaticText luminRateLabel = null;
-
-		[MVControlReference("coinRateLabel")]
-		private IStaticText coinRateLabel = null;
-
-        [MVControlReference("lumRateCoinLabel")]
-		private IStaticText lumRateCoinLabel = null;
-
-		[MVControlReference("effectiveCRateLabel")]
-		private IStaticText effectiveCRateLabel = null;
-
-        [MVControlReference("effectiveLRateLabel")]
-		private IStaticText effectiveLRateLabel = null;
-
-		[MVControlReference("timeLabel")]
-		private IStaticText timeLabel = null;
-
-		[MVControlReference("convRateInput")]
-		private ITextBox convRateInput = null;
-
-        [MVControlReference("convRateLInput")]
-		private ITextBox convRateLInput = null;
-
-        [MVControlReference("pollRateInput")]
-		private ITextBox pollRateInput = null;
-    
-        [MVControlReference("txToInput")]
-		private ITextBox txToInput = null;
-        
-        [MVControlReference("autoTxInput")]
-		private ITextBox autoTxInput = null;
-
-        [MVControlReference("coinRateLumLabel")]
-        private IStaticText coinRateLumLabel = null;
-
-        [MVControlReference("atcCurLbl")]
-        private IStaticText atcCurLbl = null;
-
-        [MVControlReference("coinBankBtn")]
-		private IButton coinBankBtn = null;
-    
-        [MVControlReference("autoResetBtn")]
-        private IButton autoResetBtn = null;
-
-        [MVControlReference("calcEnableBtn")]
-        private IButton calcEnableBtn = null;
-
-        [MVControlReference("AutoTxCoinsBtn")]
-        private IButton AutoTxCoinsBtn = null;
-
-        [MVControlReference("luminKillLabel")]
-        private IStaticText luminKillLabel = null;
-
-        [MVControlReference("luminOtherlLabel")]
-        private IStaticText luminOtherlLabel = null;
-
-        [MVControlReference("KillLabel")]
-        private IStaticText KillLabel = null;
-
-        [MVControlReference("KillHrLabel")]
-        private IStaticText KillHrLabel = null;
-
-        [MVControlReference("coinRateKillLumLabel")]
-        private IStaticText coinRateKillLumLabel = null;
-
-        [MVControlReference("effectiveKillRateLabel")]
-        private IStaticText effectiveKillRateLabel = null;
-
-        [MVControlReference("luminKillRateLabel")]
-        private IStaticText luminKillRateLabel = null;
-
-        [MVControlReference("luminOtherRateLabel")]
-        private IStaticText luminOtherRateLabel = null;
-
-        [MVControlReference("coinRateOtherLumLabel")]
-        private IStaticText coinRateOtherLumLabel = null;
-
-        [MVControlReference("effectiveOtherRateLabel")]
-        private IStaticText effectiveOtherRateLabel = null;
-
-        [MVControlReference("xpRateLabel")]
-        private IStaticText xpRateLabel = null;
-
-        [MVControlReference("xpTotalLabel")]
-        private IStaticText xpTotalLabel = null;
-
-        [MVControlReference("xpEarnedLabel")]
-        private IStaticText xpEarnedLabel = null;
-
-        [MVControlReference("xpToLvlLabel")]
-        private IStaticText xpToLvlLabel = null;
-
-        [MVControlReference("xpTimetoLvlLabel")]
-        private IStaticText xpTimetoLvlLabel = null;
+        }		
 	}
 }
 
