@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<view icon="8742" title="MelksLuminanceTrackerpopout" width="150" height="100">
+<view icon="8742" title="MLT Kills" width="150" height="100">
     <control progid="DecalControls.FixedLayout" clipped="">
         <control progid="DecalControls.StaticText" name="subtimeLabel" left="0" top="0" width="150" height="20" text="Time: 00:00"/>
         <control progid="DecalControls.StaticText" name="subluminRateLabel" left="0" top="20" width="150" height="20" text="Lum/hr: 0"/>

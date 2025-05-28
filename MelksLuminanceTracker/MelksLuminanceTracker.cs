@@ -129,6 +129,9 @@ namespace MelksLuminanceTracker
         private bool savefilefnd = false;
         private bool autotxcoin = false;
         private bool popupvis = false;
+        private bool popupvis2 = false;
+        private bool popupinit = false;
+        private bool popupinit2 = false;
         private string txToName = "";
         private string configPath;
         private string characterKey;
@@ -147,8 +150,9 @@ namespace MelksLuminanceTracker
         //popup 
         [MVControlReference("XPPopupBtn")] private IButton XPPopupBtn;
         private MyClasses.MetaViewWrappers.IView xpView;
-        private ViewProperties properties;
-        private ControlGroup controls;
+        //popup2
+        [MVControlReference("XPPopupBtn2")] private IButton XPPopupBtn2;
+        private MyClasses.MetaViewWrappers.IView xpView2;
         //controls
         [MVControlReference("luminCurrentLabel")] private IStaticText luminCurrentLabel = null;
 		[MVControlReference("coinCurrentLabel")] private IStaticText coinCurrentLabel = null;
@@ -189,6 +193,12 @@ namespace MelksLuminanceTracker
         private IStaticText subluminRateLabel;
         private IStaticText subcoinRateLabel;
         private IStaticText subKillHrLabel;
+        //Popup Controls for view 2
+        private IStaticText subtimeLabel2;
+        private IStaticText subluminRateLabel2;
+        private IStaticText subcoinRateLabel2;
+        private IStaticText subXPHrLabel;
+        
         //PopoutWindow tempPopoutwindow = new PopoutWindow();
 
 		protected override void Startup()
@@ -210,6 +220,8 @@ namespace MelksLuminanceTracker
 			try
 			{
                 		//Destroy the view.
+                        xpView.Dispose();
+                        xpView2.Dispose();
                			MVWireupHelper.WireupEnd(this);
 			}
 			catch (Exception ex) {Util.WriteToChat($"Shutdown Error: {ex}");}
@@ -244,6 +256,7 @@ namespace MelksLuminanceTracker
                 updateconversion();
                 isinitialized = true;
                 XPPopupBtn.Click += (s, es) => showpopup();
+                XPPopupBtn2.Click += (s, es) => showpopup2();
                 if (pollRate > 1) {updatePolling();}
                 if (!progenable) {Util.WriteToChat("Program is currently Disabled");}
                 bankPoll(true);
@@ -525,6 +538,13 @@ namespace MelksLuminanceTracker
                     subluminRateLabel.Text = $"Lum/hr: {tmplumstr}";
                     subcoinRateLabel.Text = $"Coins/hr: {coinRate}";
                     subKillHrLabel.Text = $"Kills/hr: {killsperhr}";
+                }
+                if (popupvis2)
+                {
+                    subtimeLabel2.Text = $"Run Time: {elapsed.TotalHours:n0}:{elapsed.Minutes:D2}";
+                    subluminRateLabel2.Text = $"Lum/hr: {tmplumstr}";
+                    subcoinRateLabel2.Text = $"Coins/hr: {coinRate}";
+                    subXPHrLabel.Text = $"XP/hr: {tmpXPRate}";
                 }
             }
             catch (Exception ex) {Util.WriteToChat($"QuickUpdateUI Error: {ex}");}
@@ -1121,19 +1141,40 @@ namespace MelksLuminanceTracker
         {
 			try
 			{
-                if (!popupvis){
-                    string tmpmainstyle = "MelksLuminanceTracker.subView.xml";
-                    xpView = MyClasses.MetaViewWrappers.ViewSystemSelector.CreateViewResource(MyHost, tmpmainstyle);
+                if (!popupinit){
+                    xpView = MyClasses.MetaViewWrappers.ViewSystemSelector.CreateViewResource(MyHost, "MelksLuminanceTracker.subView.xml");
                     xpView.Activate();
-                    xpView.Visible = true;
                     subtimeLabel = (IStaticText)xpView["subtimeLabel"];
                     subluminRateLabel = (IStaticText)xpView["subluminRateLabel"];
                     subcoinRateLabel = (IStaticText)xpView["subcoinRateLabel"];
                     subKillHrLabel = (IStaticText)xpView["subKillHrLabel"];
+                    xpView.Visible = true;
+                    popupinit = true;
                     popupvis = true;}
                 else{
-                    xpView.Visible = false;
-                    popupvis = false;}
+                    xpView.Visible = !xpView.Visible;
+                    popupvis = !popupvis;}
+			}
+			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
+		}
+
+        private void showpopup2()
+        {
+			try
+			{
+                if (!popupinit2){
+                    xpView2 = MyClasses.MetaViewWrappers.ViewSystemSelector.CreateViewResource(MyHost, "MelksLuminanceTracker.subView2.xml");
+                    xpView2.Activate();
+                    subtimeLabel2 = (IStaticText)xpView2["subtimeLabel2"];
+                    subluminRateLabel2 = (IStaticText)xpView2["subluminRateLabel2"];
+                    subcoinRateLabel2 = (IStaticText)xpView2["subcoinRateLabel2"];
+                    subXPHrLabel = (IStaticText)xpView2["subXPHrLabel"];
+                    xpView2.Visible = true;
+                    popupinit2 = true;
+                    popupvis2 = true;}
+                else{
+                    xpView2.Visible = !xpView2.Visible;
+                    popupvis2 = !popupvis2;}
 			}
 			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
 		}

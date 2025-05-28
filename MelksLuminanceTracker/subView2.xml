@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<view icon="8742" title="MLT XP" width="150" height="100">
+    <control progid="DecalControls.FixedLayout" clipped="">
+        <control progid="DecalControls.StaticText" name="subtimeLabel2" left="0" top="0" width="150" height="20" text="Time: 00:00"/>
+        <control progid="DecalControls.StaticText" name="subluminRateLabel2" left="0" top="20" width="150" height="20" text="Lum/hr: 0"/>
+        <control progid="DecalControls.StaticText" name="subcoinRateLabel2" left="0" top="40" width="150" height="20" text="Coins/hr: 0"/>
+        <control progid="DecalControls.StaticText" name="subXPHrLabel" left="0" top="60" width="150" height="20" text="XP/hr: 0"/>
+     </control>
+</view>
