@@ -19,4 +19,15 @@
     <txToName>Melka Summoner</txToName>
     <autoTxInput>50</autoTxInput>
   </Character>
+  <Character key="InfiniteLeaftide-Melkbug">
+    <AutoResetEnabled>False</AutoResetEnabled>
+    <coinusebank>False</coinusebank>
+    <progenable>True</progenable>
+    <ConversionRate>66.2</ConversionRate>
+    <ConversionLRate>66</ConversionLRate>
+    <pollRate>1</pollRate>
+    <txToName>
+    </txToName>
+    <autoTxInput>50</autoTxInput>
+  </Character>
 </MLT_Settings>

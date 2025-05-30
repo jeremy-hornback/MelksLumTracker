@@ -1154,7 +1154,7 @@ namespace MelksLuminanceTracker
                     popupvis = true;}
                 else{
                     xpView.Visible = !xpView.Visible;
-                    popupvis = !popupvis;}
+                }
 			}
 			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
 		}
@@ -1174,14 +1174,7 @@ namespace MelksLuminanceTracker
                     popupinit2 = true;
                     popupvis2 = true;}
                 else{
-                    if (popupvis2 == true){
-                        xpView2.Visible = false;
-                        popupvis2 = false;
-                    }
-                    else {
-                        xpView2.Visible = true;
-                        popupvis2 = true;
-                    }
+                    xpView2.Visible = !xpView2.Visible;
                 }
 			}
 			catch (Exception ex) {Util.WriteToChat($"showpopup Error: {ex}");}
