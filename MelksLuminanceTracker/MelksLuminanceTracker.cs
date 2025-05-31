@@ -530,7 +530,7 @@ namespace MelksLuminanceTracker
                 xpEarnedLabel.Text = $"Earned XP: {tmpxpdiff}";
                 xpRateLabel.Text = $"XP/hr: {tmpXPRate}";
                 xpToLvlLabel.Text = $"XP to Level: {tmpXPtoLevel}";
-                xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.Hours:D2}:{timetolvl.Minutes:D2}";
+                xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.TotalHours:n0}:{timetolvl.Minutes:n0}";
 
                 //Pop Up View
                 if (popupvis)
@@ -810,16 +810,17 @@ namespace MelksLuminanceTracker
                     double tmpmin;
                     if (enbDebug){Util.WriteToChat($"XP To Level Rate = {xplvlrate}.");}
                     if (xplvlrate >= 1) {
-                        tmphrs = xplvlrate % 1;
-                        tmpmin = (xplvlrate - (xplvlrate % 1)) * 60;
+                        tmphrs = xplvlrate - (xplvlrate % 1);
+                        tmpmin = ((xplvlrate % 1) * 100) * .6;
+                        
                     } else {
                         tmphrs = 0;
-                        tmpmin = xplvlrate * 60;
+                        tmpmin = 0;
                     }
                     if (enbDebug){Util.WriteToChat($"DoCalcs - tmp hours = {tmphrs}.");}
                     if (enbDebug){Util.WriteToChat($"DoCalcs - tmp Minutes = {tmpmin}.");}
-                    if (tmphrs > 999) {tmphrs = 0; tmpmin=0;}
-                    else if (tmpmin > 999) {tmpmin=0;}
+                    if (tmphrs > 9999999) {tmphrs = 0; tmpmin=0;}
+                    else if (tmpmin > 9999999) {tmpmin=0;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
