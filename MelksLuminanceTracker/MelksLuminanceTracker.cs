@@ -1485,6 +1485,8 @@ namespace MelksLuminanceTracker
                     Util.WriteToChat("/mlt txcoins");
                     Util.WriteToChat("/mlt txlum");
                     Util.WriteToChat("/mlt silentpoll");
+                    Util.WriteToChat("/mlt killpop");
+                    Util.WriteToChat("/mlt xppop");
                     Util.WriteToChat("/mlt mode [normal/eggs/shells/timelost/snowman/jams/skulls]");
                     Util.WriteToChat("The Lum-Coin Conversion value is the price of 1 coin in millions of luminance.");
                     Util.WriteToChat("The Coin-Lum Conversion value is the amount of luminance you get for 1 coin.");
@@ -1588,6 +1590,14 @@ namespace MelksLuminanceTracker
                 {
                     txStuff("Lum");
                     SaveSettings();
+                }
+                if (tokens[1].ToLower() == "killpop")
+                {
+                    showpopup();
+                }
+                if (tokens[1].ToLower() == "xppop")
+                {
+                    showpopup2();
                 }
                 if (tokens[1].ToLower() == "report")
                 {
