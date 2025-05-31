@@ -278,8 +278,8 @@ namespace MelksLuminanceTracker
                 pollTimer?.Dispose();
                 clrTimer?.Dispose();
                 updateTimer?.Dispose();
-                xpView.Dispose();
-                xpView2.Dispose();
+                if (popupinit) {xpView.Dispose();}
+                if (popupinit2) {xpView2.Dispose();}
 				pollTimer = null;
                 clrTimer = null;
                 updateTimer = null;                
@@ -817,7 +817,9 @@ namespace MelksLuminanceTracker
                         tmpmin = xplvlrate * 60;
                     }
                     if (enbDebug){Util.WriteToChat($"DoCalcs - tmp hours = {tmphrs}.");}
-                    if (tmphrs > 99) {Util.WriteToChat($"{tmphrs}"); tmphrs = 0; tmpmin=0;}
+                    if (enbDebug){Util.WriteToChat($"DoCalcs - tmp Minutes = {tmpmin}.");}
+                    if (tmphrs > 999) {tmphrs = 0; tmpmin=0;}
+                    else if (tmpmin > 999) {tmpmin=0;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
