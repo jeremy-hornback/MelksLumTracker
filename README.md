@@ -15,6 +15,8 @@ Console Commands: <br />
 /mlt mode [normal/eggs/shells/timelost/snowman/jams/skulls] <br />
 /mlt txcoins <br />
 /mlt txlum <br />
+/mlt killpop <br />
+/mlt xppop <br />
  <br />
 if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can
 <br />
