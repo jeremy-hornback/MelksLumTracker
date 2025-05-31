@@ -555,8 +555,10 @@ namespace MelksLuminanceTracker
         {
             try
             {
-                string tmpvalstr = $"{e}";
                 double tmpval = e;
+                if (tmpval < 0){tmpval = 0;}
+                string tmpvalstr = $"{tmpval}";
+                
                 if ((tmpval >= 1000000) && (tmpval < 1000000000)) 
                 {
                     tmpval = tmpval / 1000000;
@@ -814,7 +816,8 @@ namespace MelksLuminanceTracker
                         tmphrs = 0;
                         tmpmin = xplvlrate * 60;
                     }
-                    if (tmphrs > 999) {Util.WriteToChat($"{tmphrs}"); tmphrs = 0; tmpmin=0;}
+                    if (enbDebug){Util.WriteToChat($"DoCalcs - tmp hours = {tmphrs}.");}
+                    if (tmphrs > 99) {Util.WriteToChat($"{tmphrs}"); tmphrs = 0; tmpmin=0;}
                     TimeSpan tmptimehr;
                     TimeSpan tmptimemin;
                     tmptimehr = TimeSpan.FromHours(tmphrs);
