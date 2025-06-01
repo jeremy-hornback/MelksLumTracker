@@ -25,9 +25,9 @@ if you are having issues, turn on debugging and pm me on discord with your issue
 Windows open and placement saved per character. <br />
 <br />
 **Change log:**<br />
-5/31/25 - Pressing the pop up window button after window is open will close and destroy it (remove it from bar).
-        - fixed calculations for time to level based on xp rate.
-        - Added commands for opening pop up windows.
+5/31/25 - Pressing the pop up window button after window is open will close and destroy it (remove it from bar).<br />
+        - fixed calculations for time to level based on xp rate.<br />
+        - Added commands for opening pop up windows.<br />
 5/18/25 - Fixed time to level calculation<br />
 5/18/25 - Added XP Tab<br />
 5/17/25 - Fixed calculations for conversions and added reporting.<br />
