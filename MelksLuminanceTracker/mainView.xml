@@ -63,7 +63,7 @@
         </page>
         <page label="Cfg">
             <control progid="DecalControls.FixedLayout" clipped="">
-                <control progid="DecalControls.StaticText" name="ConversionLbl" left="0" top="5" width="200" height="20" text="Lum-Coin  Coin-Lum in mil lum"/>
+                <control progid="DecalControls.StaticText" name="ConversionLbl" left="0" top="5" width="200" height="20" text="Coin-Lum   Lum-Coin in mil lum"/>
                 <control progid="DecalControls.Edit" name="convRateInput" left="0" top="25" width="50" height="20" text="66.2"/>
                 <control progid="DecalControls.Edit" name="convRateLInput" left="75" top="25" width="50" height="20" text="66"/>
                 <control progid="DecalControls.PushButton" name="applyConversionButton" left="140" top="25" width="40" height="20" text="Conv"/>
