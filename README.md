@@ -18,7 +18,7 @@ Console Commands: <br />
 /mlt killpop <br />
 /mlt xppop <br />
  <br />
-if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can
+if you are having issues, turn on debugging and pm me on discord with your issue and screenshots of the debug text if you can @melkor0011866
 <br />
 <br />
 **Upcoming** <br />
