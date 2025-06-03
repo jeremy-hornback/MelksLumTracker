@@ -5,7 +5,7 @@
     <progenable>True</progenable>
     <ConversionRate>66.2</ConversionRate>
     <ConversionLRate>66</ConversionLRate>
-    <pollRate>5</pollRate>
+    <pollRate>2</pollRate>
     <txToName>Melkoran</txToName>
     <autoTxInput>50</autoTxInput>
   </Character>
@@ -13,9 +13,9 @@
     <AutoResetEnabled>False</AutoResetEnabled>
     <coinusebank>False</coinusebank>
     <progenable>True</progenable>
-    <ConversionRate>66.2</ConversionRate>
+    <ConversionRate>64</ConversionRate>
     <ConversionLRate>66</ConversionLRate>
-    <pollRate>5</pollRate>
+    <pollRate>2</pollRate>
     <txToName>Melka Summoner</txToName>
     <autoTxInput>50</autoTxInput>
   </Character>

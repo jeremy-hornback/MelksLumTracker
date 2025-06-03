@@ -60,6 +60,7 @@ namespace MelksLuminanceTracker
 	public class PluginCore : PluginBase
 	{   
         internal static Decal.Adapter.Wrappers.PluginHost MyHost;
+        private double version = 1.0;
 		private double initialCoins = -1;
 		private double initialLuminance = -1;
 		private double currentCoins;
@@ -232,7 +233,7 @@ namespace MelksLuminanceTracker
 			try
 			{
 				// Subscribe to events here
-				Util.WriteToChat("Melks Luminance Tracker Started");
+				Util.WriteToChat($"Melks Luminance Tracker V {version:n1} Started");
                 Util.WriteToChat("to see possible commands type /mlt help");
                 characterKey = $"{CoreManager.Current.CharacterFilter.Server}-{CoreManager.Current.CharacterFilter.Name}";
                 configPath = Util.FullPath("MLT_Settings.xml");
@@ -803,13 +804,13 @@ namespace MelksLuminanceTracker
                 xpCur = CoreManager.Current.CharacterFilter.TotalXP;
                 xpDiff = xpCur - xpInitVal;
                 xpRate = hours > 0 ? Math.Round(xpDiff / hours, 1) : 0;
-                if ((xpToLevel > 1) && (xpRate > 1))
+                if ((xpToLevel > 0) && (xpRate > 0))
                 {
                     double xplvlrate = xpToLevel / xpRate;
                     double tmphrs;
                     double tmpmin;
                     if (enbDebug){Util.WriteToChat($"XP To Level Rate = {xplvlrate}.");}
-                    if (xplvlrate >= 1) {
+                    if (xplvlrate > 0) {
                         tmphrs = xplvlrate - (xplvlrate % 1);
                         tmpmin = ((xplvlrate % 1) * 100) * .6;
                         
