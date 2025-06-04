@@ -531,7 +531,7 @@ namespace MelksLuminanceTracker
                 xpEarnedLabel.Text = $"Earned XP: {tmpxpdiff}";
                 xpRateLabel.Text = $"XP/hr: {tmpXPRate}";
                 xpToLvlLabel.Text = $"XP to Level: {tmpXPtoLevel}";
-                xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.TotalHours:n0}:{timetolvl.Minutes:n0}";
+                xpTimetoLvlLabel.Text = $"Time to Lvl: {timetolvl.TotalHours:n0}:{timetolvl.Minutes:D2}";
 
                 //Pop Up View
                 if (popupvis)
