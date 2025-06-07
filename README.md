@@ -1,6 +1,9 @@
 ***Melk's Luminance Tracker for Asheron's Call***
 
-Console Commands: <br />
+If installing the DLL fails, restart decal and try using the DLL within the zip file.<br />
+I usually have to remove the existing version of the plugin then close decal and reopen before it will register<br />
+
+**Console Commands:** <br />
 /mlt start <br />
 /mlt stop <br />
 /mlt reset <br />
