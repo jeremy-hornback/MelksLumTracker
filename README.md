@@ -25,7 +25,8 @@ if you are having issues, turn on debugging and pm me on discord with your issue
 Windows open and placement saved per character. <br />
 <br />
 **Change log:**<br />
-6/4/25  - Fixed minutes display on XP tab
+6/7/25  - Fixed calculation for other lum to coin calculation on the data page.<br />
+6/4/25  - Fixed minutes display on XP tab <br />
 6/3/25  - Xp/hr didn't show minutes properly if under an hour from leveling. <br />
 5/31/25 - Pressing the pop up window button after window is open will close and destroy it (remove it from bar).<br />
         - fixed calculations for time to level based on xp rate.<br />
