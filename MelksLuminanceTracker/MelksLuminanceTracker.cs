@@ -711,7 +711,7 @@ namespace MelksLuminanceTracker
                 coinRateOtherLumLabel.Text = "Lum-Coins/hr O: 0";
                 effectiveKillRateLabel.Text = "Effective K: 0";
                 effectiveOtherRateLabel.Text = "Effective O: 0";
-                if (CoinMode == 0) {atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam
+                if (CoinMode == 0) {atcCurLbl.Text = "A: 0 T: 0 C: 0 CAvail: 0";} //0=red, 1=egg, 2=shells, 3=coins, 4=snowmen, 5=Jam, 6=Skulls
                 else if (CoinMode == 1) {atcCurLbl.Text = "Eggs: 0 C: 0 MMD: 0";} 
                 else if (CoinMode == 2) {atcCurLbl.Text = "Shells: 0  MMD: 0 MK: 0";}
                 else if (CoinMode == 3) {atcCurLbl.Text = "Anc Pyrl: 0  C: 0";}
@@ -852,7 +852,7 @@ namespace MelksLuminanceTracker
                 luminkillRate = hours > 0 ? Math.Round((lumdiff - otherLuminance) / hours, 1) : 0;
                 luminOtherRate = hours > 0 ? Math.Round((lumdiff - killLuminance) / hours, 1) : 0;
                 coinRateKillLum = hours > 0 ? Math.Round((luminkillRate / conversionCRate)) : 0;
-                coinRateOtherLum = hours > 0 ? Math.Round((luminOtherRate / hours / conversionCRate)) : 0;
+                coinRateOtherLum = hours > 0 ? Math.Round((luminOtherRate / conversionCRate)) : 0;
                 effectivekillRate = coinRate + coinRateKillLum;
                 effectiveOtherRate = coinRate + coinRateOtherLum;
                 // Coins clappable

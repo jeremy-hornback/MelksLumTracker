@@ -3,8 +3,8 @@
     <AutoResetEnabled>False</AutoResetEnabled>
     <coinusebank>False</coinusebank>
     <progenable>True</progenable>
-    <ConversionRate>66.2</ConversionRate>
-    <ConversionLRate>66</ConversionLRate>
+    <ConversionRate>66</ConversionRate>
+    <ConversionLRate>64</ConversionLRate>
     <pollRate>2</pollRate>
     <txToName>Melkoran</txToName>
     <autoTxInput>50</autoTxInput>
